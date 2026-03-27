@@ -1,0 +1,21 @@
+# Agent Frameworks (Pick one or both based on your final choice)
+langgraph>=0.0.26
+crewai>=0.28.8
+
+# LLM Providers & Routing
+langchain>=0.1.13
+langchain-openai>=0.1.1
+langchain-anthropic>=0.1.4
+langchain-google-genai>=1.0.1
+
+# Vector DB & Context (For the RAG pipeline)
+chromadb>=0.4.24
+sentence-transformers>=2.6.1
+
+# Environment & Utilities
+python-dotenv>=1.0.1
+pydantic>=2.6.4
+
+# API frameworks (If you plan to serve it as an endpoint or use Generative UI)
+fastapi>=0.110.0
+uvicorn>=0.29.0
