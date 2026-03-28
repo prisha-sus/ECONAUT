@@ -1,6 +1,7 @@
-from core.llm_config import get_llm
+from src.core.llm_provider import get_llm
+from src.tools.rag_engine import load_json_data, build_vector_store  # or use FAISS directly
 
-llm = get_llm()
+llm = get_llm(provider="groq")
 
 def news_agent(state):
     user_text = state["user_input"]
