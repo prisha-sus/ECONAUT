@@ -2,7 +2,7 @@ import requests
 from gtts import gTTS
 import os
 from dotenv import load_dotenv
-from core.llm_config import get_llm
+from src.core.llm_provider import get_llm
 
 load_dotenv()
 
@@ -27,7 +27,7 @@ def get_market_news():
 
 def generate_audio_script(headlines, persona="first_time_investor"):
 
-    llm = get_llm()
+    llm = get_llm(provider="groq")
 
     news_text = "\n".join(headlines)
 

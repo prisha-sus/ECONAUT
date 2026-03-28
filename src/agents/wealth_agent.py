@@ -28,7 +28,7 @@ User message:
 
     # Check for cross-sell opportunities
     cross_sell = evaluate_cross_sell_opportunity(user_text)
-    if cross_sell != "[NO CROSS-SELL TRIGGERED] Maintain standard conversational flow.":
+    if cross_sell:
         state["response"] = response.content + "\n\n" + cross_sell
     else:
         state["response"] = response.content
