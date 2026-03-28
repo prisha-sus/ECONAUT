@@ -1,6 +1,6 @@
-from core.llm_config import get_llm
+from src.core.llm_provider import get_llm
 
-llm = get_llm()
+llm = get_llm(provider="groq")
 
 def router_agent(state):
     user_text = state["user_input"]

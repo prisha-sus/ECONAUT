@@ -1,6 +1,13 @@
-from core.llm_config import get_llm
+from src.core.llm_provider import get_llm
+import json
+import os
 
-llm = get_llm()
+llm = get_llm(provider="groq")
+
+# Load masterclasses
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
+with open(os.path.join(DATA_DIR, 'et_masterclasses.json'), 'r') as f:
+    masterclasses = json.load(f)
 
 def learning_agent(state):
     user_text = state["user_input"]
@@ -25,5 +32,11 @@ User message:
 
     response = llm.invoke(prompt)
 
-    state["response"] = response.content
+    # Add relevant masterclasses
+    relevant_mc = [mc for mc in masterclasses if 'beginner' in mc.get('target_audience', '').lower() or 'general' in mc.get('target_audience', '').lower()]
+    if relevant_mc:
+        mc_text = "\n\nRecommended Masterclasses:\n" + "\n".join([f"- {mc['title']}: {mc['description']} ({mc['url']})" for mc in relevant_mc[:2]])
+        state["response"] = response.content + mc_text
+    else:
+        state["response"] = response.content
     return state

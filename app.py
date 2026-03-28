@@ -2,12 +2,12 @@ from langgraph.graph import StateGraph
 from state.agent_state import AgentState
 
 # Import agents
-from agents.router_agent import router_agent
-from agents.learning_agent import learning_agent
-from agents.wealth_agent import wealth_agent
-from agents.tax_agent import tax_agent
-from agents.news_agent import news_agent
-from agents.reflection_agent import reflection_agent
+from src.agents.router_agent import router_agent
+from src.agents.learning_agent import learning_agent
+from src.agents.wealth_agent import wealth_agent
+from src.agents.tax_agent import tax_agent
+from src.agents.news_agent import news_agent
+from src.agents.reflection_agent import reflection_agent
 from features.daily_commute import run_daily_commute
 
 # Create graph
