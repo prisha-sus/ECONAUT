@@ -19,3 +19,5 @@ pydantic>=2.6.4
 # API frameworks (If you plan to serve it as an endpoint or use Generative UI)
 fastapi>=0.110.0
 uvicorn>=0.29.0
+python-dotenv
+websockets
