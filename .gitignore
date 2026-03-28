@@ -28,6 +28,5 @@ Thumbs.db
 # Vector DB / Local Data
 *.sqlite3
 chroma/
-data/
 
 .vscode/
