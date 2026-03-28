@@ -59,7 +59,7 @@ while True:
     print("Routed To:", result["route"])
 
    
-    if "daily commute" in user_text.lower():
+    if "commute" in user_text.lower():
         run_daily_commute(result["persona"])
         continue
 
