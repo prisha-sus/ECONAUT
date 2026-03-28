@@ -108,6 +108,9 @@ def run_daily_commute(persona):
     print("\nDone! Your audio file is saved at:")
     print(file)
 
+    # Play the audio
+    os.startfile(os.path.abspath(file))
+
 
 # ---------- RUN ----------
 if __name__ == "__main__":
