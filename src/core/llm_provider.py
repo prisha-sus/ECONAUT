@@ -14,7 +14,7 @@ def get_llm(provider="groq", model_name=None, temperature=0.1):
         # Llama 3 70b or 8b are excellent default choices on Groq
         default_model = "openai/gpt-oss-120b" or "llama3-8b-8192" 
         return ChatGroq(
-            api_key=os.getenv("GROQ_API_KEY"),
+            api_key=os.getenv("GROQAI_API_KEY"),
             model_name=default_model,
             temperature=temperature
         )

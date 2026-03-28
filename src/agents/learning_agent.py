@@ -5,7 +5,7 @@ import os
 llm = get_llm(provider="groq")
 
 # Load masterclasses
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data')
 with open(os.path.join(DATA_DIR, 'et_masterclasses.json'), 'r') as f:
     masterclasses = json.load(f)
 
