@@ -1,3 +1,9 @@
+
+.env
+venv/
+__pycache__/
+*.pyc
+=======
 # Environments
 .env
 .venv
@@ -23,3 +29,4 @@ Thumbs.db
 *.sqlite3
 chroma/
 data/
+
