@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ET AI Concierge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --et-red:    #E2231A;
+      --et-dark:   #0F0F0F;
+      --et-card:   #161616;
+      --et-border: rgba(255,255,255,0.08);
+      --et-muted:  rgba(255,255,255,0.38);
+      --et-text:   #F0EDE6;
+      --et-accent: #F5A623;
+      --user-bg:   #E2231A;
+      --bot-bg:    #1E1E1E;
+      --radius:    14px;
+      --input-h:   52px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--et-dark);
+      color: var(--et-text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ───────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--et-border);
+      flex-shrink: 0;
+      background: rgba(15,15,15,0.96);
+      backdrop-filter: blur(12px);
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo-mark {
+      width: 38px; height: 38px;
+      background: var(--et-red);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .header-text h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      line-height: 1.2;
+    }
+
+    .header-text p {
+      font-size: 12px;
+      color: var(--et-muted);
+      font-weight: 300;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      margin-left: auto;
+      flex-shrink: 0;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    .status-dot.disconnected { background: #f87171; animation: none; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.6; transform: scale(0.85); }
+    }
+
+    /* ── Messages area ───────────────────────────────────────── */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-thumb { background: var(--et-border); border-radius: 4px; }
+
+    /* Welcome splash */
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex: 1;
+      text-align: center;
+      padding: 40px 24px;
+      animation: fade-up 0.5s ease both;
+    }
+
+    .welcome-icon {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--et-red), #a0160f);
+      border-radius: 20px;
+      display: grid; place-items: center;
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .welcome h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 24px;
+      font-weight: 400;
+    }
+
+    .welcome p {
+      font-size: 14px;
+      color: var(--et-muted);
+      max-width: 300px;
+      line-height: 1.6;
+    }
+
+    .welcome-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .chip {
+      padding: 8px 14px;
+      background: var(--et-card);
+      border: 1px solid var(--et-border);
+      border-radius: 100px;
+      font-size: 13px;
+      color: var(--et-text);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .chip:hover {
+      border-color: rgba(226,35,26,0.5);
+      background: rgba(226,35,26,0.08);
+    }
+
+    /* Message bubbles */
+    .msg-row {
+      display: flex;
+      gap: 10px;
+      animation: fade-up 0.25s ease both;
+    }
+
+    .msg-row.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      display: grid; place-items: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .avatar.bot {
+      background: var(--et-red);
+      font-family: 'DM Serif Display', serif;
+      color: #fff;
+    }
+
+    .avatar.user {
+      background: rgba(255,255,255,0.08);
+      color: var(--et-muted);
+    }
+
+    .bubble {
+      max-width: min(72%, 520px);
+      padding: 11px 15px;
+      border-radius: var(--radius);
+      font-size: 14.5px;
+      line-height: 1.65;
+      word-break: break-word;
+    }
+
+    .bubble.bot {
+      background: var(--bot-bg);
+      border: 1px solid var(--et-border);
+      border-bottom-left-radius: 4px;
+      color: var(--et-text);
+    }
+
+    .bubble.user {
+      background: var(--user-bg);
+      border-bottom-right-radius: 4px;
+      color: #fff;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 14px 16px;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--et-muted);
+      animation: bounce 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.15s; }
+    .dot:nth-child(3) { animation-delay: 0.30s; }
+
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30%            { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* ── Input bar ───────────────────────────────────────────── */
+    .input-area {
+      padding: 14px 20px 20px;
+      border-top: 1px solid var(--et-border);
+      flex-shrink: 0;
+      background: rgba(15,15,15,0.97);
+    }
+
+    .input-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      background: var(--et-card);
+      border: 1px solid var(--et-border);
+      border-radius: var(--radius);
+      padding: 8px 8px 8px 16px;
+      transition: border-color 0.2s;
+    }
+
+    .input-wrap:focus-within { border-color: rgba(226,35,26,0.5); }
+
+    #user-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--et-text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14.5px;
+      line-height: 1.5;
+      resize: none;
+      max-height: 120px;
+      min-height: 36px;
+      padding: 4px 0;
+    }
+
+    #user-input::placeholder { color: var(--et-muted); }
+
+    #send-btn {
+      width: 36px; height: 36px;
+      border: none;
+      border-radius: 10px;
+      background: var(--et-red);
+      color: #fff;
+      cursor: pointer;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    #send-btn:hover  { opacity: 0.85; }
+    #send-btn:active { transform: scale(0.93); }
+    #send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    #send-btn svg { width: 16px; height: 16px; }
+
+    .ws-banner {
+      text-align: center;
+      font-size: 12px;
+      color: #f87171;
+      padding: 6px 0 0;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo-mark">ET</div>
+  <div class="header-text">
+    <h1>ET AI Concierge</h1>
+    <p>Your personal Economic Times guide</p>
+  </div>
+  <div class="status-dot" id="status-dot" title="Connecting..."></div>
+</header>
+
+<!-- Messages -->
+<div id="messages">
+  <div class="welcome" id="welcome">
+    <div class="welcome-icon">ET</div>
+    <h2>Hello, I'm your ET Concierge</h2>
+    <p>Ask me anything about markets, ET Prime, Masterclasses, or your financial goals.</p>
+    <div class="welcome-chips">
+      <button class="chip" onclick="sendChip(this)">📈 What's trending in markets?</button>
+      <button class="chip" onclick="sendChip(this)">🎓 Explore Masterclasses</button>
+      <button class="chip" onclick="sendChip(this)">💼 Help me plan for retirement</button>
+      <button class="chip" onclick="sendChip(this)">🔍 Find me ET Prime content</button>
+    </div>
+  </div>
+</div>
+
+<!-- Input -->
+<div class="input-area">
+  <div class="input-wrap">
+    <textarea id="user-input" rows="1" placeholder="Ask your ET Concierge anything…" autocomplete="off"></textarea>
+    <button id="send-btn" title="Send">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+  <div class="ws-banner" id="ws-banner" style="display:none">
+    ⚠ Disconnected from server — retrying…
+  </div>
+</div>
+
+<script>
+  const messagesEl  = document.getElementById('messages');
+  const input       = document.getElementById('user-input');
+  const sendBtn     = document.getElementById('send-btn');
+  const statusDot   = document.getElementById('status-dot');
+  const wsBanner    = document.getElementById('ws-banner');
+  const WS_URL      = 'ws://localhost:8000/ws';
+
+  let socket        = null;
+  let streamingBubble = null;
+  let reconnectTimer  = null;
+
+  // ── Auto-resize textarea ───────────────────────────────────────
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  });
+
+  // ── Send on Enter (Shift+Enter = newline) ──────────────────────
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  sendBtn.addEventListener('click', sendMessage);
+
+  // ── Quick-chip handler ─────────────────────────────────────────
+  function sendChip(btn) {
+    const text = btn.innerText.replace(/^[\p{Emoji}\s]+/u, '').trim();
+    input.value = text;
+    sendMessage();
+  }
+
+  // ── Remove welcome splash on first message ─────────────────────
+  function removeWelcome() {
+    const w = document.getElementById('welcome');
+    if (w) w.remove();
+  }
+
+  // ── Append a message bubble ────────────────────────────────────
+  function appendBubble(role, text) {
+    removeWelcome();
+    const row = document.createElement('div');
+    row.className = `msg-row ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = `avatar ${role}`;
+    avatar.textContent = role === 'bot' ? 'ET' : 'You'[0];
+
+    const bubble = document.createElement('div');
+    bubble.className = `bubble ${role}`;
+    bubble.textContent = text;
+
+    if (role === 'bot') {
+      row.appendChild(avatar);
+      row.appendChild(bubble);
+    } else {
+      row.appendChild(bubble);
+      row.appendChild(avatar);
+    }
+
+    messagesEl.appendChild(row);
+    scrollBottom();
+    return bubble;
+  }
+
+  // ── Typing indicator ───────────────────────────────────────────
+  function showTyping() {
+    removeWelcome();
+    const row = document.createElement('div');
+    row.className = 'msg-row bot';
+    row.id = 'typing-row';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar bot';
+    avatar.textContent = 'ET';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble bot typing-indicator';
+    bubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    messagesEl.appendChild(row);
+    scrollBottom();
+  }
+
+  function hideTyping() {
+    const t = document.getElementById('typing-row');
+    if (t) t.remove();
+  }
+
+  function scrollBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  // ── Send message ───────────────────────────────────────────────
+  function sendMessage() {
+    const text = input.value.trim();
+    if (!text || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+    appendBubble('user', text);
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+    showTyping();
+
+    socket.send(JSON.stringify({ message: text }));
+  }
+
+  // ── WebSocket ──────────────────────────────────────────────────
+  function connect() {
+    socket = new WebSocket(WS_URL);
+
+    socket.onopen = () => {
+      statusDot.className = 'status-dot';
+      statusDot.title = 'Connected';
+      wsBanner.style.display = 'none';
+      clearTimeout(reconnectTimer);
+      console.log('WebSocket connected');
+    };
+
+    socket.onmessage = (evt) => {
+      const data = JSON.parse(evt.data);
+
+      if (data.type === 'start') {
+        hideTyping();
+        streamingBubble = appendBubble('bot', '');
+      }
+
+      if (data.type === 'chunk' && streamingBubble) {
+        streamingBubble.textContent += data.content;
+        scrollBottom();
+      }
+
+      if (data.type === 'end') {
+        streamingBubble = null;
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    };
+
+    socket.onclose = () => {
+      statusDot.className = 'status-dot disconnected';
+      statusDot.title = 'Disconnected';
+      wsBanner.style.display = 'block';
+      sendBtn.disabled = true;
+      hideTyping();
+      reconnectTimer = setTimeout(connect, 3000);
+      console.log('WebSocket closed — retrying in 3s');
+    };
+
+    socket.onerror = (err) => {
+      console.error('WebSocket error:', err);
+      socket.close();
+    };
+  }
+
+  connect();
+</script>
+</body>
+</html>
