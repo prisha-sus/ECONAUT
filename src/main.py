@@ -3,9 +3,9 @@ import json
 import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
-# ── Phase 2: import voice pipeline ────────────────────────────────────────────
 from .voice_pipeline import handle_voice_websocket
 
 load_dotenv()
@@ -14,19 +14,28 @@ app = FastAPI(title="ET AI Concierge - Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ── Phase 3: Serve the audio/ folder so browser can fetch the mp3 ─────────────
+# URL: http://localhost:8000/audio/et_daily_commute.mp3
+AUDIO_DIR = os.path.join(os.path.dirname(__file__), "..", "audio")
+if os.path.isdir(AUDIO_DIR):
+    app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
+    print(f"[Audio] Serving static audio from: {os.path.abspath(AUDIO_DIR)}")
+else:
+    print(f"[Audio] WARNING: audio/ folder not found at {AUDIO_DIR}")
+
+
 # ── Phase 1: Text WebSocket ────────────────────────────────────────────────────
 async def get_agent_response(message: str) -> str:
     """
-    MOCK RESPONSE — Replace this function body with:
+    MOCK RESPONSE — Replace with:
         from agents.orchestrator import run_agent
         return await run_agent(message)
-    once Member 1's LangGraph agent is wired up.
     """
     await asyncio.sleep(0.8)
     return (
@@ -69,7 +78,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.close()
 
 
-# ── Phase 2: Voice WebSocket (NEW) ────────────────────────────────────────────
+# ── Phase 2: Voice WebSocket ───────────────────────────────────────────────────
 @app.websocket("/ws/voice")
 async def voice_endpoint(websocket: WebSocket):
     await handle_voice_websocket(websocket)

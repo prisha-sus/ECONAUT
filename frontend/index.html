@@ -35,7 +35,7 @@
       flex-shrink: 0;
       background: rgba(15,15,15,0.96);
       backdrop-filter: blur(12px);
-      position: relative; z-index: 10;
+      z-index: 10;
     }
     .logo-mark {
       width: 38px; height: 38px; background: var(--et-red);
@@ -44,9 +44,28 @@
     }
     .header-text h1 { font-family: 'DM Serif Display', serif; font-size: 17px; font-weight: 400; line-height: 1.2; }
     .header-text p  { font-size: 12px; color: var(--et-muted); font-weight: 300; }
+
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .tts-toggle-wrap {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; color: var(--et-muted); cursor: pointer; user-select: none;
+    }
+    .toggle-track {
+      position: relative; width: 32px; height: 18px;
+      background: rgba(255,255,255,0.12); border-radius: 9px;
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .toggle-track.on { background: var(--et-red); }
+    .toggle-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #fff; transition: transform 0.2s; pointer-events: none;
+    }
+    .toggle-track.on .toggle-thumb { transform: translateX(14px); }
+
     .status-dot {
       width: 8px; height: 8px; border-radius: 50%; background: #4ade80;
-      margin-left: auto; flex-shrink: 0; animation: pulse-dot 2s ease-in-out infinite;
+      flex-shrink: 0; animation: pulse-dot 2s ease-in-out infinite;
     }
     .status-dot.disconnected { background: #f87171; animation: none; }
     @keyframes pulse-dot {
@@ -90,12 +109,26 @@
     }
     .avatar.bot  { background: var(--et-red); font-family: 'DM Serif Display', serif; color: #fff; }
     .avatar.user { background: rgba(255,255,255,0.08); color: var(--et-muted); }
+
     .bubble {
       max-width: min(72%, 520px); padding: 11px 15px; border-radius: var(--radius);
-      font-size: 14.5px; line-height: 1.65; word-break: break-word;
+      font-size: 14.5px; line-height: 1.65; word-break: break-word; position: relative;
     }
     .bubble.bot  { background: var(--bot-bg); border: 1px solid var(--et-border); border-bottom-left-radius: 4px; }
     .bubble.user { background: var(--user-bg); border-bottom-right-radius: 4px; color: #fff; }
+
+    /* Speaking animation */
+    .bubble.bot.speaking { border-color: rgba(226,35,26,0.45); }
+    .bubble.bot.speaking::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 0; right: 0; height: 2px;
+      background: var(--et-red); border-radius: 0 0 4px 4px;
+      animation: speaking-bar 1s ease-in-out infinite;
+    }
+    @keyframes speaking-bar {
+      0%, 100% { opacity: 0.3; transform: scaleX(0.3); transform-origin: left; }
+      50%       { opacity: 1;   transform: scaleX(1);   transform-origin: left; }
+    }
 
     .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 14px 16px; }
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--et-muted); animation: bounce 1.2s infinite; }
@@ -128,15 +161,11 @@
       width: 36px; height: 36px; border: none; border-radius: 10px;
       background: rgba(255,255,255,0.06); color: var(--et-muted);
       cursor: pointer; display: grid; place-items: center; flex-shrink: 0;
-      transition: background 0.2s, color 0.2s, transform 0.1s;
-      user-select: none; -webkit-user-select: none;
+      transition: background 0.2s, color 0.2s; user-select: none; -webkit-user-select: none;
     }
     #mic-btn:hover { background: rgba(255,255,255,0.1); color: var(--et-text); }
     #mic-btn.ready { color: rgba(255,255,255,0.6); }
-    #mic-btn.recording {
-      background: rgba(226,35,26,0.2); color: var(--et-red);
-      animation: mic-pulse 1s ease-in-out infinite;
-    }
+    #mic-btn.recording { background: rgba(226,35,26,0.2); color: var(--et-red); animation: mic-pulse 1s ease-in-out infinite; }
     #mic-btn.disabled { opacity: 0.3; cursor: not-allowed; }
     #mic-btn svg { width: 16px; height: 16px; pointer-events: none; }
     @keyframes mic-pulse {
@@ -155,10 +184,7 @@
     #send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     #send-btn svg { width: 16px; height: 16px; }
 
-    #voice-status {
-      font-size: 12px; color: var(--et-accent);
-      padding: 6px 0 0; min-height: 22px; transition: opacity 0.3s;
-    }
+    #voice-status { font-size: 12px; color: var(--et-accent); padding: 6px 0 0; min-height: 22px; }
     .ws-banner { text-align: center; font-size: 12px; color: #f87171; padding: 4px 0 0; }
 
     @keyframes fade-up {
@@ -175,7 +201,15 @@
     <h1>ET AI Concierge</h1>
     <p>Your personal Economic Times guide</p>
   </div>
-  <div class="status-dot" id="status-dot"></div>
+  <div class="header-right">
+    <label class="tts-toggle-wrap" title="Toggle voice responses">
+      <div class="toggle-track on" id="tts-track">
+        <div class="toggle-thumb"></div>
+      </div>
+      <span id="tts-label">Voice on</span>
+    </label>
+    <div class="status-dot" id="status-dot"></div>
+  </div>
 </header>
 
 <div id="messages">
@@ -215,6 +249,7 @@
 </div>
 
 <script>
+  // ── DOM refs ────────────────────────────────────────────────────────────────
   const messagesEl  = document.getElementById('messages');
   const input       = document.getElementById('user-input');
   const sendBtn     = document.getElementById('send-btn');
@@ -222,6 +257,8 @@
   const statusDot   = document.getElementById('status-dot');
   const wsBanner    = document.getElementById('ws-banner');
   const voiceStatus = document.getElementById('voice-status');
+  const ttsTrack    = document.getElementById('tts-track');
+  const ttsLabel    = document.getElementById('tts-label');
 
   const TEXT_WS_URL  = 'ws://localhost:8000/ws';
   const VOICE_WS_URL = 'ws://localhost:8000/ws/voice';
@@ -230,47 +267,69 @@
   let streamingBubble = null;
   let reconnectTimer  = null;
 
-  // ── Mic state ──────────────────────────────────────────────────────────────
-  let micStream       = null;   // reused across recordings — requested ONCE
-  let mediaRecorder   = null;
-  let isRecording     = false;
+  // ── TTS state ────────────────────────────────────────────────────────────────
+  let ttsEnabled       = true;
+  let lastBotText      = '';    // stores the last complete bot response
+  let lastBotBubble    = null;  // reference to the last bot bubble DOM element
+  let currentBubble    = null;  // bubble currently being spoken
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Request microphone permission ONCE on page load
-  // ─────────────────────────────────────────────────────────────────────────
-  async function initMic() {
-    try {
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      micBtn.classList.remove('disabled');
-      micBtn.classList.add('ready');
-      micBtn.title = 'Hold to speak';
-      setVoiceStatus('');
-      console.log('[Mic] Permission granted, stream ready');
-    } catch (err) {
-      micBtn.title = 'Microphone access denied';
-      setVoiceStatus('⚠ Microphone access denied. Check browser settings.');
-      console.warn('[Mic] Permission denied:', err);
+  // ── TTS toggle ───────────────────────────────────────────────────────────────
+  ttsTrack.addEventListener('click', () => {
+    ttsEnabled = !ttsEnabled;
+    ttsTrack.classList.toggle('on', ttsEnabled);
+    ttsLabel.textContent = ttsEnabled ? 'Voice on' : 'Voice off';
+
+    if (!ttsEnabled) {
+      // Switched OFF — stop whatever is playing
+      stopSpeaking();
+    } else {
+      // Switched ON — replay the last bot response if there is one
+      if (lastBotText && lastBotBubble) {
+        speakText(lastBotText, lastBotBubble);
+      }
+    }
+  });
+
+  // ── TTS core ─────────────────────────────────────────────────────────────────
+  function stopSpeaking() {
+    window.speechSynthesis.cancel();
+    if (currentBubble) {
+      currentBubble.classList.remove('speaking');
+      currentBubble = null;
     }
   }
 
-  initMic();   // ← runs immediately when page loads
+  function speakText(text, bubble) {
+    if (!ttsEnabled || !text.trim()) return;
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Text WebSocket (Phase 1 — unchanged)
-  // ─────────────────────────────────────────────────────────────────────────
-  input.addEventListener('input', () => {
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-  });
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-  });
-  sendBtn.addEventListener('click', sendMessage);
+    stopSpeaking(); // cancel any ongoing speech first
 
-  function sendChip(btn) {
-    input.value = btn.innerText.replace(/^[\p{Emoji}\s]+/u, '').trim();
-    sendMessage();
+    // Strip [MOCK] prefix so it doesn't get read aloud
+    const cleanText = text.replace(/\[MOCK\]/g, '').trim();
+
+    const utter    = new SpeechSynthesisUtterance(cleanText);
+    utter.rate     = 1.05;
+    utter.pitch    = 1.0;
+    utter.lang     = 'en-IN';  // Indian English — fits ET's audience
+
+    utter.onstart  = () => {
+      currentBubble = bubble;
+      bubble.classList.add('speaking');
+    };
+    utter.onend    = () => {
+      bubble.classList.remove('speaking');
+      currentBubble = null;
+    };
+    utter.onerror  = () => {
+      bubble.classList.remove('speaking');
+      currentBubble = null;
+    };
+
+    window.speechSynthesis.speak(utter);
   }
+
+  // ── UI helpers ────────────────────────────────────────────────────────────────
+  function setVoiceStatus(msg) { voiceStatus.textContent = msg; }
 
   function removeWelcome() {
     const w = document.getElementById('welcome');
@@ -313,11 +372,26 @@
   }
 
   function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
-  function setVoiceStatus(msg) { voiceStatus.textContent = msg; }
+
+  // ── Text WebSocket ────────────────────────────────────────────────────────────
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  sendBtn.addEventListener('click', sendMessage);
+
+  function sendChip(btn) {
+    input.value = btn.innerText.replace(/^[\p{Emoji}\s]+/u, '').trim();
+    sendMessage();
+  }
 
   function sendMessage() {
     const text = input.value.trim();
     if (!text || !textSocket || textSocket.readyState !== WebSocket.OPEN) return;
+    stopSpeaking();  // stop TTS when user sends a new message
     appendBubble('user', text);
     input.value = ''; input.style.height = 'auto';
     sendBtn.disabled = true;
@@ -325,62 +399,98 @@
     textSocket.send(JSON.stringify({ message: text }));
   }
 
+  let fullBotResponse = '';
+
   function connectTextWS() {
     textSocket = new WebSocket(TEXT_WS_URL);
+
     textSocket.onopen = () => {
       statusDot.className = 'status-dot';
       wsBanner.style.display = 'none';
       clearTimeout(reconnectTimer);
     };
+
     textSocket.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
-      if (data.type === 'start')  { hideTyping(); streamingBubble = appendBubble('bot', ''); }
-      if (data.type === 'chunk' && streamingBubble) { streamingBubble.textContent += data.content; scrollBottom(); }
-      if (data.type === 'end')    { streamingBubble = null; sendBtn.disabled = false; input.focus(); }
+
+      if (data.type === 'start') {
+        hideTyping();
+        fullBotResponse = '';
+        streamingBubble = appendBubble('bot', '');
+      }
+
+      if (data.type === 'chunk' && streamingBubble) {
+        fullBotResponse += data.content;
+        streamingBubble.textContent += data.content;
+        scrollBottom();
+      }
+
+      if (data.type === 'end' && streamingBubble) {
+        sendBtn.disabled = false;
+        input.focus();
+
+        // Save last response + bubble so toggle-on can replay it
+        lastBotText   = fullBotResponse;
+        lastBotBubble = streamingBubble;
+        streamingBubble = null;
+
+        // Speak the response (only if toggle is on)
+        speakText(lastBotText, lastBotBubble);
+      }
     };
+
     textSocket.onclose = () => {
       statusDot.className = 'status-dot disconnected';
       wsBanner.style.display = 'block';
       sendBtn.disabled = true;
       reconnectTimer = setTimeout(connectTextWS, 3000);
     };
+
     textSocket.onerror = () => textSocket.close();
   }
+
   connectTextWS();
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Voice recording — uses the already-granted micStream
-  // ─────────────────────────────────────────────────────────────────────────
+  // ── Mic / Voice WebSocket (Phase 2 — unchanged) ───────────────────────────────
+  let micStream     = null;
+  let mediaRecorder = null;
+  let isRecording   = false;
+
+  async function initMic() {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micBtn.classList.remove('disabled');
+      micBtn.classList.add('ready');
+      micBtn.title = 'Hold to speak';
+    } catch {
+      setVoiceStatus('⚠ Microphone access denied.');
+    }
+  }
+  initMic();
+
   function startRecording() {
     if (isRecording || !micStream || micBtn.classList.contains('disabled')) return;
-
+    stopSpeaking();  // stop TTS when user starts speaking
     isRecording = true;
     micBtn.classList.add('recording');
     setVoiceStatus('🔴 Recording… release to transcribe');
 
-    // Open a fresh voice WebSocket for this recording session
     const voiceSocket = new WebSocket(VOICE_WS_URL);
 
     voiceSocket.onopen = () => {
-      // MediaRecorder reuses the existing micStream — no new permission needed
       mediaRecorder = new MediaRecorder(micStream, {
         mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-                  ? 'audio/webm;codecs=opus'
-                  : 'audio/webm'
+                  ? 'audio/webm;codecs=opus' : 'audio/webm'
       });
-
       mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0 && voiceSocket.readyState === WebSocket.OPEN) {
+        if (e.data.size > 0 && voiceSocket.readyState === WebSocket.OPEN)
           voiceSocket.send(e.data);
-        }
       };
-
-      mediaRecorder.start(250);   // emit a chunk every 250ms
+      mediaRecorder.start(250);
     };
 
     voiceSocket.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
-
       if (data.type === 'transcript') {
         const text = data.text.trim();
         if (text) {
@@ -394,20 +504,14 @@
           setTimeout(() => setVoiceStatus(''), 2500);
         }
       }
-
       if (data.type === 'error') {
         setVoiceStatus(`⚠ ${data.message}`);
         setTimeout(() => setVoiceStatus(''), 3000);
       }
     };
 
-    voiceSocket.onerror = () => {
-      setVoiceStatus('Voice connection error.');
-      stopRecording(voiceSocket);
-    };
-
-    // Store socket reference so stopRecording can access it
-    micBtn._voiceSocket = voiceSocket;
+    voiceSocket.onerror  = () => stopRecording(voiceSocket);
+    micBtn._voiceSocket  = voiceSocket;
   }
 
   function stopRecording(explicitSocket) {
@@ -415,24 +519,15 @@
     isRecording = false;
     micBtn.classList.remove('recording');
     setVoiceStatus('⏳ Transcribing…');
-
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-      // Note: do NOT stop micStream tracks — we reuse the stream for next recording
-    }
-
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
     const vs = explicitSocket || micBtn._voiceSocket;
-    if (vs && vs.readyState === WebSocket.OPEN) {
+    if (vs && vs.readyState === WebSocket.OPEN)
       vs.send(JSON.stringify({ type: 'end_of_speech' }));
-    }
   }
 
-  // Press-and-hold (mouse)
   micBtn.addEventListener('mousedown',  (e) => { e.preventDefault(); startRecording(); });
   micBtn.addEventListener('mouseup',    ()  => stopRecording());
   micBtn.addEventListener('mouseleave', ()  => { if (isRecording) stopRecording(); });
-
-  // Press-and-hold (touch / mobile)
   micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); }, { passive: false });
   micBtn.addEventListener('touchend',   (e) => { e.preventDefault(); stopRecording(); },  { passive: false });
 </script>
