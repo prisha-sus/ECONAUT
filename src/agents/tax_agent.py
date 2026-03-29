@@ -1,6 +1,7 @@
-from core.llm_config import get_llm
+from src.core.llm_provider import get_llm
+from src.tools.cross_sell_engine import evaluate_cross_sell_opportunity
 
-llm = get_llm()
+llm = get_llm(provider="groq")
 
 def tax_agent(state):
     user_text = state["user_input"]
@@ -22,5 +23,10 @@ User message:
 
     response = llm.invoke(prompt)
 
-    state["response"] = response.content
+    # Check for cross-sell opportunities
+    cross_sell = evaluate_cross_sell_opportunity(user_text)
+    if cross_sell:
+        state["response"] = response.content + "\n\n" + cross_sell
+    else:
+        state["response"] = response.content
     return state
