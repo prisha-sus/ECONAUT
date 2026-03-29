@@ -30,7 +30,6 @@ Adhering to the evaluation focus on operational intelligence and multi-step agen
 ### The Core Agentic Framework
 - **Orchestration Layer:** Built with **LangGraph** (acting as a recommended framework from the tech guidelines) serving as the cyclic state machine controlling conversation flows and multi-agent routing.
 - **Router Agent:** Analyzes user intent dynamically to trigger specific skill-nodes (RAG search, account aggregator parser, or cross-sell engine).
-- **Core Memory Agent:** Utilizing **Letta (MemGPT)** to maintain a persistent, evolvable memory of user goals and historical interactions, ensuring domain context is preserved across steps.
 - **Fallback Router Guard:** Guarantees absolute uptime. To achieve extra credit for cost-efficient architectures routing between large and small models, our fallback architecture automatically redirects calls to a secondary provider if the primary (Groq) limits out.
 
 ### Tools & Feature Modules
@@ -88,7 +87,7 @@ ECONAUT has been rigorously benchmarked against the mandated Track 7 scenario de
 ---
 ## 🛡️ Enterprise Readiness
 To ensure rigorous industrial viability, ECONAUT integrates enterprise-grade guardrails:
-- **NeMo Guardrails:** Acts as an interception middleware layer directly mapping inputs against safety prompts. Malicious queries or off-topic prompts are strictly filtered before reaching the orchestration routing nodes.
+- **NeMo Guardrails:** Partial implement of NeMo Gaurdrails to act as an interception middleware layer directly mapping inputs against safety prompts. Malicious queries or off-topic prompts are strictly filtered before reaching the orchestration routing nodes.
 - **Zero API Exposure:** All secret tokens and access protocols remain securely stored inside the hosting platform's environment variables (such as Render or Railway) and are omitted from public GitHub commits.
 
 ## 📊 Impact Model
