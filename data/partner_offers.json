@@ -1,0 +1,16 @@
+[
+  {
+    "offer_id": "offer_hl_01",
+    "category": "home_loan",
+    "partner": "ET Partner Banks",
+    "trigger_intent": "real estate, home loan, buying a house",
+    "details": "Special 8.35% interest rate on home loans for ET readers. Zero processing fees."
+  },
+  {
+    "offer_id": "offer_etm_01",
+    "category": "tax_saving",
+    "partner": "ET Money",
+    "trigger_intent": "tax saving, elss, section 80c, deductions",
+    "details": "Maximize your 80C deductions instantly. Invest in top-rated ELSS Mutual Funds via ET Money with zero commission."
+  }
+]
