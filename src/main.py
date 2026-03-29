@@ -21,7 +21,7 @@ from agents.news_agent     import news_agent
 from agents.tax_agent      import tax_agent
 from state.agent_state     import AgentState
 
-# ── Phase 2: Voice pipeline ────────────────────────────────────────────────────
+# ── Voice pipeline (Phase 2) ───────────────────────────────────────────────────
 from voice_pipeline import handle_voice_websocket
 
 app = FastAPI(title="ET AI Concierge")
@@ -39,6 +39,8 @@ AUDIO_DIR = os.path.join(os.path.dirname(__file__), "..", "audio")
 if os.path.isdir(AUDIO_DIR):
     app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
     print(f"[Audio] Serving from: {os.path.abspath(AUDIO_DIR)}")
+else:
+    print(f"[Audio] WARNING: audio/ folder not found at {AUDIO_DIR}")
 
 # ── Agent pipeline ─────────────────────────────────────────────────────────────
 AGENT_MAP = {
