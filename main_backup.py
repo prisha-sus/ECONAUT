@@ -10,19 +10,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Make sure src/ is on the path so agents can import each other ──────────────
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # ── Import agents ──────────────────────────────────────────────────────────────
-from agents.router_agent   import router_agent
-from agents.learning_agent import learning_agent
-from agents.beginner_agent import beginner_agent
-from agents.wealth_agent   import wealth_agent
-from agents.news_agent     import news_agent
-from agents.tax_agent      import tax_agent
-from state.agent_state     import AgentState
+from src.agents.router_agent   import router_agent
+from src.agents.learning_agent import learning_agent
+from src.agents.beginner_agent import beginner_agent
+from src.agents.wealth_agent   import wealth_agent
+from src.agents.news_agent     import news_agent
+from src.agents.tax_agent      import tax_agent
+from src.state.agent_state     import AgentState
 
-# ── Voice pipeline (Phase 2) ───────────────────────────────────────────────────
-from voice_pipeline import handle_voice_websocket
+# ── Voice pipeline (Phase 2) - Temporarily disabled ───────────────────────────
+# from src.voice_pipeline import handle_voice_websocket
 
 app = FastAPI(title="ET AI Concierge")
 
@@ -131,13 +131,18 @@ async def websocket_endpoint(websocket: WebSocket):
             pass
 
 
-# ── Voice WebSocket (Phase 2) ──────────────────────────────────────────────────
-@app.websocket("/ws/voice")
-async def voice_endpoint(websocket: WebSocket):
-    await handle_voice_websocket(websocket)
+# ── Voice WebSocket (Phase 2) - Temporarily disabled ───────────────────────
+# @app.websocket("/ws/voice")
+# async def voice_endpoint(websocket: WebSocket):
+#     await handle_voice_websocket(websocket)
 
 
 # ── Health check ───────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "ET AI Concierge"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)

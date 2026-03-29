@@ -249,20 +249,28 @@ def sanitize_input(text: str) -> str:
 
 # ── Sensitive Data Masking ────────────────────────────────────────────────────
 
-def mask_sensitive_data(data: dict) -> dict:
+def mask_sensitive_data(data):
     """
     Redacts sensitive fields before logging or storing.
+    Handles both dict and str inputs.
+    For strings, returns as-is (masking free text requires NLP).
     """
-    SENSITIVE_KEYS = {"pan", "aadhaar", "account_number", "phone", "email", "dob"}
-
-    masked = {}
-    for key, value in data.items():
-        if key.lower() in SENSITIVE_KEYS:
-            masked[key] = "****REDACTED****"
-        else:
-            masked[key] = value
-
-    return masked
+    if isinstance(data, str):
+        # For string inputs, return as-is since masking requires structured data
+        return data
+    
+    if isinstance(data, dict):
+        SENSITIVE_KEYS = {"pan", "aadhaar", "account_number", "phone", "email", "dob"}
+        masked = {}
+        for key, value in data.items():
+            if key.lower() in SENSITIVE_KEYS:
+                masked[key] = "****REDACTED****"
+            else:
+                masked[key] = value
+        return masked
+    
+    # For other types, return as-is
+    return data
 
 
 # ── Guardrails Engine ─────────────────────────────────────────────────────────

@@ -9,26 +9,30 @@ import torch
 import faster_whisper
 from fastapi import WebSocket, WebSocketDisconnect
 
-# ── Load models once at import time ───────────────────────────────────────────
-print("[Voice] Loading Silero VAD model...")
-vad_model, vad_utils = torch.hub.load(
-    repo_or_dir="snakers4/silero-vad",
-    model="silero_vad",
-    force_reload=False,
-    trust_repo=True,
-)
-(get_speech_timestamps, _, read_audio, *_) = vad_utils
-print("[Voice] VAD model loaded.")
-
-print("[Voice] Loading Faster-Whisper (base) model...")
-whisper_model = faster_whisper.WhisperModel(
-    "base",
-    device="cpu",
-    compute_type="int8",
-)
-print("[Voice] Whisper model loaded.")
-
+# ── Lazy load models (only when needed) ───────────────────────────────────────
+vad_model = None
+vad_utils = None
+whisper_model = None
 SAMPLE_RATE = 16000
+
+def load_models():
+    global vad_model, vad_utils, whisper_model
+    if vad_model is None:
+        print("[Voice] Loading Silero VAD model...")
+        vad_model, vad_utils = torch.hub.load(
+            repo_or_dir="snakers4/silero-vad",
+            model="silero_vad",
+            force_reload=False,
+            trust_repo=True,
+        )
+    if whisper_model is None:
+        print("[Voice] Loading Faster-Whisper (base) model...")
+        whisper_model = faster_whisper.WhisperModel(
+            "base",
+            device="cpu",
+            compute_type="int8",
+        )
+        print("[Voice] Models loaded.")
 
 
 def webm_to_float32(webm_bytes: bytes) -> np.ndarray:
@@ -36,6 +40,11 @@ def webm_to_float32(webm_bytes: bytes) -> np.ndarray:
     Convert browser webm/opus bytes → float32 numpy array at 16kHz mono.
     Uses ffmpeg subprocess (must be installed on the system).
     """
+    # Get the path to ffmpeg in the tools directory
+    import os
+    script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ffmpeg_path = os.path.join(script_dir, "tools", "ffmpeg", "ffmpeg-8.1-essentials_build", "bin", "ffmpeg.exe")
+    
     with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as f:
         f.write(webm_bytes)
         tmp_in = f.name
@@ -44,7 +53,7 @@ def webm_to_float32(webm_bytes: bytes) -> np.ndarray:
 
     try:
         subprocess.run([
-            "ffmpeg", "-y",
+            ffmpeg_path, "-y",
             "-i", tmp_in,
             "-ar", "16000",      # resample to 16kHz
             "-ac", "1",          # mono
@@ -67,6 +76,9 @@ def webm_to_float32(webm_bytes: bytes) -> np.ndarray:
 
 def remove_silence_with_vad(audio: np.ndarray) -> np.ndarray:
     """Run Silero VAD and return only voiced segments."""
+    load_models()
+    (get_speech_timestamps, _, read_audio, *_) = vad_utils
+    
     audio_tensor = torch.from_numpy(audio)
     speech_timestamps = get_speech_timestamps(
         audio_tensor,
@@ -88,6 +100,8 @@ def remove_silence_with_vad(audio: np.ndarray) -> np.ndarray:
 
 def transcribe(audio: np.ndarray) -> str:
     """Run Faster-Whisper on float32 audio array."""
+    load_models()
+    
     if len(audio) < SAMPLE_RATE * 0.3:   # less than 0.3s — skip
         print("[Whisper] Audio too short, skipping")
         return ""

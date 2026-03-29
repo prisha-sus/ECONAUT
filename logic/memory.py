@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 # ── Try importing Letta (MemGPT) ─────────────────────────────────────────────
 try:
-    from letta_client import Letta
+    from letta_client import Letta, create_client, ChatMemory
     LETTA_AVAILABLE = True
 except ImportError:
     LETTA_AVAILABLE = False
