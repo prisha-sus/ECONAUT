@@ -1,0 +1,38 @@
+define user ask financial question
+  "What stocks should I buy?"
+  "How to save tax?"
+  "Best SIP for beginners?"
+  "Tell me about mutual funds"
+  "How to plan for retirement?"
+  "What is ET Prime?"
+  "I want to invest in market"
+
+define user ask non financial question
+  "Tell me a joke"
+  "What is the weather today?"
+  "Who won the cricket match?"
+  "Talk to me about politics"
+  "What movies are showing?"
+
+define flow financial guard
+  user ask non financial question
+  bot refuse non financial
+
+define bot refuse non financial
+  "I am here to help with financial guidance and ET services. Please ask a finance-related question."
+
+define flow greet user
+  user express greeting
+  bot express greeting
+  bot ask financial topic
+
+define bot express greeting
+  "Welcome to ET AI Concierge! I'm here to help you with your financial journey."
+
+define bot ask financial topic
+  "What financial topic can I help you with today? For example: investments, tax saving, mutual funds, or ET products."
+
+define flow off topic block
+  user ask non financial question
+  bot refuse non financial
+  stop

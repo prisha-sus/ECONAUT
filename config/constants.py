@@ -1,0 +1,2 @@
+MAX_RECOMMENDATIONS = 3
+WELCOME_MESSAGE = "Welcome to ET AI Concierge!"

@@ -1,0 +1,42 @@
+models:
+  - type: main
+    engine: openai
+    model: gpt-3.5-turbo
+
+instructions:
+  - type: general
+    content: |
+      You are the ET AI Concierge — an assistant for The Economic Times.
+      You ONLY discuss topics related to personal finance, investments, stock markets,
+      tax planning, insurance, mutual funds, SIPs, loans, wealth management,
+      and ET products (ET Prime, ET Masterclasses, ET Markets, ET Money).
+      You must NEVER discuss politics, entertainment, sports, jokes, or general chitchat.
+      Always be polite, professional, and beginner-friendly.
+
+rails:
+  input:
+    flows:
+      - check financial topic
+
+  output:
+    flows:
+      - check bot response
+
+flows:
+  - id: check financial topic
+    steps:
+      - label: start
+        user: "..."
+        execute: check_financial_query
+        goto: financial_check_result
+
+      - label: financial_check_result
+        if: $financial_query == False
+        bot: "I am here to help with financial guidance and ET services. Please ask a finance-related question."
+        stop: true
+
+  - id: check bot response
+    steps:
+      - label: start
+        bot: "..."
+        execute: validate_bot_response
