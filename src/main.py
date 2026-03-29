@@ -13,14 +13,16 @@ load_dotenv()
 sys.path.insert(0, os.path.dirname(__file__))
 
 # ── Import agents ──────────────────────────────────────────────────────────────
-from .agents.router_agent   import router_agent
-from .agents.learning_agent import learning_agent
-from .agents.beginner_agent import beginner_agent
-from .agents.wealth_agent   import wealth_agent
-from .agents.news_agent     import news_agent
-from .agents.tax_agent      import tax_agent
-from .state.agent_state     import AgentState
-#from .voice_pipeline        import handle_voice_websocket
+from agents.router_agent   import router_agent
+from agents.learning_agent import learning_agent
+from agents.beginner_agent import beginner_agent
+from agents.wealth_agent   import wealth_agent
+from agents.news_agent     import news_agent
+from agents.tax_agent      import tax_agent
+from state.agent_state     import AgentState
+
+# ── Phase 2: Voice pipeline ────────────────────────────────────────────────────
+from voice_pipeline import handle_voice_websocket
 
 app = FastAPI(title="ET AI Concierge")
 
@@ -32,12 +34,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Serve audio/ folder for TTS jingle ────────────────────────────────────────
+# ── Serve audio/ folder for TTS jingle (Phase 3) ──────────────────────────────
 AUDIO_DIR = os.path.join(os.path.dirname(__file__), "..", "audio")
 if os.path.isdir(AUDIO_DIR):
     app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
     print(f"[Audio] Serving from: {os.path.abspath(AUDIO_DIR)}")
-
 
 # ── Agent pipeline ─────────────────────────────────────────────────────────────
 AGENT_MAP = {
@@ -48,13 +49,6 @@ AGENT_MAP = {
 }
 
 async def run_pipeline(user_input: str) -> dict:
-    """
-    Full agent pipeline:
-      1. Router  → detects persona + intent + picks route
-      2. Specialist agent → generates response
-    Returns dict with response, persona, intent, route.
-    Runs sync LangChain calls in a thread so we don't block the event loop.
-    """
     state: AgentState = {
         "user_input": user_input,
         "persona":    None,
@@ -65,14 +59,14 @@ async def run_pipeline(user_input: str) -> dict:
 
     loop = asyncio.get_event_loop()
 
-    # Step 1 — Router (sync, run in executor)
+    # Step 1 — Router
     state = await loop.run_in_executor(None, router_agent, state)
     print(f"[Router] persona={state['persona']} | intent={state['intent']} | route={state['route']}")
 
     # Step 2 — Specialist agent
-    route          = state.get("route", "learning")
-    specialist     = AGENT_MAP.get(route, learning_agent)
-    state          = await loop.run_in_executor(None, specialist, state)
+    route      = state.get("route", "learning")
+    specialist = AGENT_MAP.get(route, learning_agent)
+    state      = await loop.run_in_executor(None, specialist, state)
 
     return {
         "response": state.get("response", "Sorry, I could not generate a response."),
@@ -96,10 +90,8 @@ async def websocket_endpoint(websocket: WebSocket):
             if not user_message:
                 continue
 
-            # Tell frontend streaming has started
             await websocket.send_text(json.dumps({"type": "start"}))
 
-            # Run the full agent pipeline
             try:
                 result = await run_pipeline(user_message)
             except Exception as e:
@@ -111,7 +103,6 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_text(json.dumps({"type": "end"}))
                 continue
 
-            # Stream the response word-by-word so the frontend feels real-time
             words = result["response"].split(" ")
             for i, word in enumerate(words):
                 chunk = word + (" " if i < len(words) - 1 else "")
@@ -121,7 +112,6 @@ async def websocket_endpoint(websocket: WebSocket):
                 }))
                 await asyncio.sleep(0.03)
 
-            # Send metadata so frontend can optionally show persona/intent
             await websocket.send_text(json.dumps({
                 "type":    "end",
                 "persona": result["persona"],
@@ -139,10 +129,10 @@ async def websocket_endpoint(websocket: WebSocket):
             pass
 
 
-# ── Voice WebSocket ────────────────────────────────────────────────────────────
-# @app.websocket("/ws/voice")
-# async def voice_endpoint(websocket: WebSocket):
-#     await handle_voice_websocket(websocket)
+# ── Voice WebSocket (Phase 2) ──────────────────────────────────────────────────
+@app.websocket("/ws/voice")
+async def voice_endpoint(websocket: WebSocket):
+    await handle_voice_websocket(websocket)
 
 
 # ── Health check ───────────────────────────────────────────────────────────────

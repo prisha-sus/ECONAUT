@@ -26,7 +26,6 @@
       height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
     }
 
-    /* ── Header ── */
     header {
       display: flex; align-items: center; gap: 14px; padding: 16px 24px;
       border-bottom: 1px solid var(--et-border); flex-shrink: 0;
@@ -41,14 +40,11 @@
     .header-text p  { font-size: 12px; color: var(--et-muted); font-weight: 300; }
     .header-right   { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 
-    /* Persona badge in header */
     #persona-badge {
       font-size: 11px; padding: 3px 10px;
       background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.25);
-      border-radius: 100px; color: var(--et-accent);
-      display: none;
+      border-radius: 100px; color: var(--et-accent); display: none;
     }
-
     .tts-toggle-wrap {
       display: flex; align-items: center; gap: 7px; font-size: 12px;
       color: var(--et-muted); cursor: pointer; user-select: none;
@@ -64,7 +60,6 @@
       border-radius: 50%; background: #fff; transition: transform 0.2s; pointer-events: none;
     }
     .toggle-track.on .toggle-thumb { transform: translateX(14px); }
-
     .status-dot {
       width: 8px; height: 8px; border-radius: 50%; background: #4ade80;
       flex-shrink: 0; animation: pulse-dot 2s ease-in-out infinite;
@@ -75,7 +70,6 @@
       50%      { opacity:.6; transform:scale(.85); }
     }
 
-    /* ── Messages ── */
     #messages {
       flex: 1; overflow-y: auto; padding: 24px 20px;
       display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth;
@@ -103,7 +97,6 @@
     }
     .chip:hover { border-color: rgba(226,35,26,0.5); background: rgba(226,35,26,0.08); }
 
-    /* ── Message rows ── */
     .msg-row { display: flex; gap: 10px; animation: fade-up 0.25s ease both; }
     .msg-row.user { flex-direction: row-reverse; }
     .avatar {
@@ -120,27 +113,14 @@
     .bubble.bot  { background: var(--bot-bg); border: 1px solid var(--et-border); border-bottom-left-radius: 4px; }
     .bubble.user { background: var(--user-bg); border-bottom-right-radius: 4px; color: #fff; }
 
-    /* Markdown-style rendering inside bot bubbles */
     .bubble.bot strong { font-weight: 600; color: #fff; }
-    .bubble.bot ol, .bubble.bot ul { padding-left: 18px; margin: 6px 0; }
+    .bubble.bot ul, .bubble.bot ol { padding-left: 18px; margin: 6px 0; }
     .bubble.bot li { margin-bottom: 4px; }
     .bubble.bot a  { color: var(--et-accent); text-decoration: none; border-bottom: 1px solid rgba(245,166,35,0.3); }
     .bubble.bot a:hover { border-color: var(--et-accent); }
-    .bubble.bot .mc-card {
-      margin-top: 10px; padding: 10px 12px;
-      background: rgba(255,255,255,0.04); border: 1px solid var(--et-border);
-      border-radius: 10px; font-size: 13px;
-    }
-    .bubble.bot .mc-card strong { display: block; margin-bottom: 2px; color: var(--et-accent); font-size: 13px; }
-    .bubble.bot .mc-card a { font-size: 12px; }
 
-    /* Route tag below bot bubble */
-    .route-tag {
-      font-size: 10px; color: var(--et-muted); margin-top: 5px;
-      padding: 0 2px; letter-spacing: 0.03em;
-    }
+    .route-tag { font-size: 10px; color: var(--et-muted); margin-top: 5px; padding: 0 2px; letter-spacing: 0.03em; }
 
-    /* Speaking animation */
     .bubble.bot.speaking { border-color: rgba(226,35,26,0.45); }
     .bubble.bot.speaking::after {
       content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px;
@@ -152,7 +132,6 @@
       50%      { opacity:1;  transform:scaleX(1);  transform-origin:left; }
     }
 
-    /* Typing indicator */
     .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 14px 16px; }
     .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--et-muted); animation: bounce 1.2s infinite; }
     .dot:nth-child(2) { animation-delay: .15s; }
@@ -162,7 +141,6 @@
       30%          { transform:translateY(-5px); opacity:1; }
     }
 
-    /* ── Input area ── */
     .input-area {
       padding: 14px 20px 20px; border-top: 1px solid var(--et-border);
       flex-shrink: 0; background: rgba(15,15,15,0.97);
@@ -271,20 +249,19 @@
 </div>
 
 <script>
-  // ── DOM refs ─────────────────────────────────────────────────────────────────
-  const messagesEl    = document.getElementById('messages');
-  const input         = document.getElementById('user-input');
-  const sendBtn       = document.getElementById('send-btn');
-  const micBtn        = document.getElementById('mic-btn');
-  const statusDot     = document.getElementById('status-dot');
-  const wsBanner      = document.getElementById('ws-banner');
-  const voiceStatus   = document.getElementById('voice-status');
-  const ttsTrack      = document.getElementById('tts-track');
-  const ttsLabel      = document.getElementById('tts-label');
-  const personaBadge  = document.getElementById('persona-badge');
+  const messagesEl   = document.getElementById('messages');
+  const input        = document.getElementById('user-input');
+  const sendBtn      = document.getElementById('send-btn');
+  const micBtn       = document.getElementById('mic-btn');
+  const statusDot    = document.getElementById('status-dot');
+  const wsBanner     = document.getElementById('ws-banner');
+  const voiceStatus  = document.getElementById('voice-status');
+  const ttsTrack     = document.getElementById('tts-track');
+  const ttsLabel     = document.getElementById('tts-label');
+  const personaBadge = document.getElementById('persona-badge');
 
-  const TEXT_WS_URL   = 'ws://localhost:8000/ws';
-  const VOICE_WS_URL  = 'ws://localhost:8000/ws/voice';
+  const TEXT_WS_URL  = 'ws://localhost:8000/ws';
+  const VOICE_WS_URL = 'ws://localhost:8000/ws/voice';
 
   let textSocket      = null;
   let streamingBubble = null;
@@ -293,28 +270,18 @@
   let lastBotText     = '';
   let lastBotBubble   = null;
   let currentBubble   = null;
+  let rawBotResponse  = '';
 
-  // ── Markdown-lite renderer ───────────────────────────────────────────────────
-  // Converts **bold**, numbered lists, bullet lists, and URLs into HTML
+  // ── Markdown renderer ────────────────────────────────────────────────────────
   function renderMarkdown(text) {
     let html = text
-      // Escape HTML special chars first
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      // **bold**
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // Bare URLs → clickable links
       .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
-      // Numbered list lines: "1. text"
       .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
-      // Bullet list lines: "- text" or "• text"
       .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
-
-    // Wrap consecutive <li> groups in <ol> or <ul>
     html = html.replace(/(<li>.*?<\/li>(\n|$))+/gs, match => `<ul>${match}</ul>`);
-
-    // Line breaks → <br> (but not inside list tags)
     html = html.replace(/\n(?!<)/g, '<br>');
-
     return html;
   }
 
@@ -323,11 +290,8 @@
     ttsEnabled = !ttsEnabled;
     ttsTrack.classList.toggle('on', ttsEnabled);
     ttsLabel.textContent = ttsEnabled ? 'Voice on' : 'Voice off';
-    if (!ttsEnabled) {
-      stopSpeaking();
-    } else if (lastBotText && lastBotBubble) {
-      speakText(lastBotText, lastBotBubble);
-    }
+    if (!ttsEnabled) stopSpeaking();
+    else if (lastBotText && lastBotBubble) speakText(lastBotText, lastBotBubble);
   });
 
   function stopSpeaking() {
@@ -338,37 +302,30 @@
   function speakText(text, bubble) {
     if (!ttsEnabled || !text.trim()) return;
     stopSpeaking();
-    // Strip markdown symbols for clean speech
     const clean = text.replace(/\*\*/g, '').replace(/\n/g, ' ').replace(/https?:\/\/\S+/g, '').trim();
-    const utter  = new SpeechSynthesisUtterance(clean);
-    utter.rate   = 1.05; utter.pitch = 1.0; utter.lang = 'en-IN';
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.rate = 1.05; utter.pitch = 1.0; utter.lang = 'en-IN';
     utter.onstart = () => { currentBubble = bubble; bubble.classList.add('speaking'); };
     utter.onend   = () => { bubble.classList.remove('speaking'); currentBubble = null; };
     utter.onerror = () => { bubble.classList.remove('speaking'); currentBubble = null; };
     window.speechSynthesis.speak(utter);
   }
 
-  // ── Persona badge ────────────────────────────────────────────────────────────
+  // ── Persona badge ─────────────────────────────────────────────────────────────
   const PERSONA_LABELS = {
-    first_time_investor: '🌱 First-time investor',
+    first_time_investor:  '🌱 First-time investor',
     experienced_investor: '📊 Experienced investor',
-    unknown: null,
   };
-
   function updatePersonaBadge(persona) {
     const label = PERSONA_LABELS[persona];
-    if (label) {
-      personaBadge.textContent = label;
-      personaBadge.style.display = 'inline-block';
-    }
+    if (label) { personaBadge.textContent = label; personaBadge.style.display = 'inline-block'; }
   }
 
   // ── UI helpers ────────────────────────────────────────────────────────────────
   function setVoiceStatus(msg) { voiceStatus.textContent = msg; }
 
   function removeWelcome() {
-    const w = document.getElementById('welcome');
-    if (w) w.remove();
+    const w = document.getElementById('welcome'); if (w) w.remove();
   }
 
   function appendBubble(role, html, routeTag) {
@@ -378,23 +335,21 @@
     const avatar = document.createElement('div');
     avatar.className = `avatar ${role}`;
     avatar.textContent = role === 'bot' ? 'ET' : 'Y';
-    const col    = document.createElement('div');   // column wrapper for bubble + tag
+    const col    = document.createElement('div');
     col.style.cssText = 'display:flex;flex-direction:column;gap:0';
     const bubble = document.createElement('div');
     bubble.className = `bubble ${role}`;
     if (role === 'bot') bubble.innerHTML = html || '';
     else                bubble.textContent = html || '';
     col.appendChild(bubble);
-
     if (role === 'bot' && routeTag) {
       const tag = document.createElement('div');
-      tag.className  = 'route-tag';
+      tag.className = 'route-tag';
       tag.textContent = `Handled by: ${routeTag} agent`;
       col.appendChild(tag);
     }
-
     if (role === 'bot') { row.appendChild(avatar); row.appendChild(col); }
-    else                { row.appendChild(col); row.appendChild(avatar); }
+    else                { row.appendChild(col);    row.appendChild(avatar); }
     messagesEl.appendChild(row);
     scrollBottom();
     return bubble;
@@ -413,13 +368,10 @@
     messagesEl.appendChild(row); scrollBottom();
   }
 
-  function hideTyping() {
-    const t = document.getElementById('typing-row'); if (t) t.remove();
-  }
-
+  function hideTyping() { const t = document.getElementById('typing-row'); if (t) t.remove(); }
   function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
 
-  // ── Text WebSocket ────────────────────────────────────────────────────────────
+  // ── Text input / send ─────────────────────────────────────────────────────────
   input.addEventListener('input', () => {
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 120) + 'px';
@@ -445,69 +397,47 @@
     textSocket.send(JSON.stringify({ message: text }));
   }
 
-  let rawBotResponse  = '';   // plain text (for TTS)
-  let htmlBotResponse = '';   // rendered HTML (for display)
-
+  // ── Text WebSocket ────────────────────────────────────────────────────────────
   function connectTextWS() {
     textSocket = new WebSocket(TEXT_WS_URL);
-
     textSocket.onopen = () => {
       statusDot.className = 'status-dot';
       wsBanner.style.display = 'none';
       clearTimeout(reconnectTimer);
     };
-
     textSocket.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
-
       if (data.type === 'start') {
-        hideTyping();
-        rawBotResponse  = '';
-        htmlBotResponse = '';
+        hideTyping(); rawBotResponse = '';
         streamingBubble = appendBubble('bot', '');
       }
-
       if (data.type === 'chunk' && streamingBubble) {
-        rawBotResponse  += data.content;
-        // Re-render full markdown on each chunk (keeps formatting correct mid-stream)
+        rawBotResponse += data.content;
         streamingBubble.innerHTML = renderMarkdown(rawBotResponse);
         scrollBottom();
       }
-
       if (data.type === 'end' && streamingBubble) {
-        sendBtn.disabled = false;
-        input.focus();
-
-        // Update persona badge if provided
+        sendBtn.disabled = false; input.focus();
         if (data.persona) updatePersonaBadge(data.persona);
-
-        // Add route tag under the bubble
         if (data.route) {
-          const tag = streamingBubble.nextElementSibling;
-          if (tag && tag.classList.contains('route-tag'))
-            tag.textContent = `Handled by: ${data.route} agent`;
+          const tag = streamingBubble.parentElement?.querySelector('.route-tag');
+          if (tag) tag.textContent = `Handled by: ${data.route} agent`;
         }
-
-        lastBotText   = rawBotResponse;
-        lastBotBubble = streamingBubble;
+        lastBotText = rawBotResponse; lastBotBubble = streamingBubble;
         streamingBubble = null;
-
         speakText(lastBotText, lastBotBubble);
       }
     };
-
     textSocket.onclose = () => {
       statusDot.className = 'status-dot disconnected';
-      wsBanner.style.display = 'block';
-      sendBtn.disabled = true;
+      wsBanner.style.display = 'block'; sendBtn.disabled = true;
       reconnectTimer = setTimeout(connectTextWS, 3000);
     };
     textSocket.onerror = () => textSocket.close();
   }
-
   connectTextWS();
 
-  // ── Mic / Voice WebSocket (Phase 2 — unchanged) ───────────────────────────────
+  // ── Mic / Voice WebSocket (Phase 2) ───────────────────────────────────────────
   let micStream = null, mediaRecorder = null, isRecording = false;
 
   async function initMic() {
@@ -539,8 +469,7 @@
       if (data.type === 'transcript') {
         const text = data.text.trim();
         if (text) {
-          setVoiceStatus('');
-          input.value = text;
+          setVoiceStatus(''); input.value = text;
           input.style.height = 'auto';
           input.style.height = Math.min(input.scrollHeight, 120) + 'px';
           sendMessage();
