@@ -21,9 +21,9 @@ def evaluate_cross_sell_opportunity(user_intent: str) -> str:
             
             # Check if any of the trigger keywords are in the user's detected intent
             if any(trigger in user_intent_lower for trigger in triggers):
-                return f"[CROSS-SELL TRIGGERED] Partner: {offer['partner']} | Offer: {offer['details']}"
+                return offer["details"]
                 
-        return "[NO CROSS-SELL TRIGGERED] Maintain standard conversational flow."
+        return ""
 
     except Exception as e:
         return f"Error loading cross-sell database: {str(e)}"
@@ -31,12 +31,15 @@ def evaluate_cross_sell_opportunity(user_intent: str) -> str:
 if __name__ == "__main__":
     # Test 1: Should trigger the ET Money offer
     print("Testing Intent: 'How can I do some tax saving this year?'")
-    print(evaluate_cross_sell_opportunity("tax saving"))
+    result = evaluate_cross_sell_opportunity("tax saving")
+    print("Result:", result if result else "No trigger")
     
     # Test 2: Should trigger the Home Loan offer
     print("\nTesting Intent: 'I am looking at real estate properties.'")
-    print(evaluate_cross_sell_opportunity("real estate"))
+    result = evaluate_cross_sell_opportunity("real estate")
+    print("Result:", result if result else "No trigger")
     
     # Test 3: Should not trigger anything
     print("\nTesting Intent: 'What is the stock market doing today?'")
-    print(evaluate_cross_sell_opportunity("general market news"))
+    result = evaluate_cross_sell_opportunity("general market news")
+    print("Result:", result if result else "No trigger")
