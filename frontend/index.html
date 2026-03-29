@@ -18,6 +18,7 @@
       --user-bg:   #E2231A;
       --bot-bg:    #1E1E1E;
       --radius:    14px;
+      --panel-w:   260px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -26,6 +27,7 @@
       height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
     }
 
+    /* ── Header ── */
     header {
       display: flex; align-items: center; gap: 14px; padding: 16px 24px;
       border-bottom: 1px solid var(--et-border); flex-shrink: 0;
@@ -70,6 +72,16 @@
       50%      { opacity:.6; transform:scale(.85); }
     }
 
+    /* ── Main layout: chat + side panel ── */
+    .main-layout {
+      flex: 1; display: flex; overflow: hidden;
+    }
+
+    /* ── Chat column ── */
+    .chat-col {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    }
+
     #messages {
       flex: 1; overflow-y: auto; padding: 24px 20px;
       display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth;
@@ -77,6 +89,70 @@
     #messages::-webkit-scrollbar { width: 4px; }
     #messages::-webkit-scrollbar-thumb { background: var(--et-border); border-radius: 4px; }
 
+    /* ── [FEATURE 3] Contextual latency messages ── */
+    .latency-indicator {
+      display: flex; align-items: center; gap: 10px; padding: 12px 15px;
+    }
+    .latency-dots { display: flex; gap: 4px; }
+    .latency-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--et-accent); animation: bounce 1.2s infinite;
+    }
+    .latency-dot:nth-child(2) { animation-delay: .15s; }
+    .latency-dot:nth-child(3) { animation-delay: .30s; }
+    .latency-text {
+      font-size: 13px; color: var(--et-accent);
+      animation: fade-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes fade-pulse {
+      0%,100% { opacity:.6; } 50% { opacity:1; }
+    }
+
+    /* ── [FEATURE 2] Transparency Panel ── */
+    .agent-panel {
+      width: var(--panel-w); flex-shrink: 0;
+      border-left: 1px solid var(--et-border);
+      background: #0a0a0a;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--et-border);
+      font-size: 11px; font-weight: 500;
+      color: var(--et-muted); letter-spacing: 0.08em;
+      text-transform: uppercase; flex-shrink: 0;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .panel-live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #4ade80;
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    #agent-log {
+      flex: 1; overflow-y: auto; padding: 10px 14px;
+      display: flex; flex-direction: column; gap: 6px;
+      font-family: 'DM Sans', monospace; font-size: 11.5px;
+    }
+    #agent-log::-webkit-scrollbar { width: 3px; }
+    #agent-log::-webkit-scrollbar-thumb { background: var(--et-border); border-radius: 3px; }
+
+    .log-entry {
+      color: rgba(255,255,255,0.55);
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      animation: fade-up 0.2s ease both;
+      line-height: 1.5;
+    }
+    .log-entry.highlight { color: #4ade80; }
+    .log-entry.error     { color: #f87171; }
+    .log-entry.router    { color: var(--et-accent); }
+
+    .log-empty {
+      color: rgba(255,255,255,0.2); font-size: 11px;
+      text-align: center; margin-top: 20px; line-height: 1.6;
+    }
+
+    /* ── Welcome screen ── */
     .welcome {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; gap: 10px; flex: 1;
@@ -97,48 +173,31 @@
     }
     .chip:hover { border-color: rgba(226,35,26,0.5); background: rgba(226,35,26,0.08); }
 
-    /* FIX 1: Both bot and user rows share the same base flex layout */
-    .msg-row {
-      display: flex;
-      gap: 10px;
-      animation: fade-up 0.25s ease both;
-      /* bot rows: avatar left, bubble right — default */
-    }
-    /* FIX 2: user rows — reverse so avatar is on the right */
-    .msg-row.user {
-      flex-direction: row-reverse;
-    }
+    /* ── Messages ── */
+    /* FIX 1: Both roles use same DOM order. row-reverse on .user handles visual flip. */
+    .msg-row { display: flex; gap: 10px; animation: fade-up 0.25s ease both; }
+    .msg-row.user { flex-direction: row-reverse; }
 
     .avatar {
       width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
       display: grid; place-items: center; font-size: 13px; font-weight: 600;
-      align-self: flex-start; /* pin avatar to top of bubble */
+      align-self: flex-start;
     }
     .avatar.bot  { background: var(--et-red); font-family: 'DM Serif Display', serif; color: #fff; }
     .avatar.user { background: rgba(255,255,255,0.08); color: var(--et-muted); }
 
-    /* FIX 3: col wrapper takes remaining space but never exceeds 72% */
+    /* FIX 2: max-width on the wrapper col so both bot and user bubbles are equally constrained */
     .msg-col {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      max-width: min(72%, 560px); /* constrain BOTH bot and user bubbles equally */
+      display: flex; flex-direction: column; gap: 0;
+      max-width: min(72%, 560px);
     }
 
     .bubble {
       padding: 12px 15px; border-radius: var(--radius);
       font-size: 14.5px; line-height: 1.7; word-break: break-word; position: relative;
     }
-    /* FIX 4: bot bubble aligns text left, user bubble aligns text left inside its red bg */
-    .bubble.bot  {
-      background: var(--bot-bg); border: 1px solid var(--et-border);
-      border-bottom-left-radius: 4px;
-    }
-    .bubble.user {
-      background: var(--user-bg); border-bottom-right-radius: 4px; color: #fff;
-      /* FIX 5: user bubble text should align left within the red bubble */
-      text-align: left;
-    }
+    .bubble.bot  { background: var(--bot-bg); border: 1px solid var(--et-border); border-bottom-left-radius: 4px; }
+    .bubble.user { background: var(--user-bg); border-bottom-right-radius: 4px; color: #fff; text-align: left; }
 
     .bubble.bot strong { font-weight: 600; color: #fff; }
     .bubble.bot ul, .bubble.bot ol { padding-left: 18px; margin: 6px 0; }
@@ -159,19 +218,26 @@
       50%      { opacity:1;  transform:scaleX(1);  transform-origin:left; }
     }
 
-    .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 14px 16px; }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--et-muted); animation: bounce 1.2s infinite; }
-    .dot:nth-child(2) { animation-delay: .15s; }
-    .dot:nth-child(3) { animation-delay: .30s; }
-    @keyframes bounce {
-      0%,60%,100% { transform:translateY(0); opacity:.4; }
-      30%          { transform:translateY(-5px); opacity:1; }
-    }
-
+    /* ── Input area ── */
     .input-area {
-      padding: 14px 20px 20px; border-top: 1px solid var(--et-border);
+      padding: 10px 20px 18px; border-top: 1px solid var(--et-border);
       flex-shrink: 0; background: rgba(15,15,15,0.97);
     }
+
+    /* ── [FEATURE 1] Judge chips ── */
+    .judge-chips {
+      display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .judge-chip {
+      padding: 5px 12px;
+      background: rgba(226,35,26,0.08);
+      border: 1px solid rgba(226,35,26,0.25);
+      border-radius: 100px; font-size: 12px; color: rgba(240,237,230,0.8);
+      cursor: pointer; transition: background 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    .judge-chip:hover { background: rgba(226,35,26,0.18); border-color: rgba(226,35,26,0.5); color: #fff; }
+
     .input-wrap {
       display: flex; align-items: flex-end; gap: 10px;
       background: var(--et-card); border: 1px solid var(--et-border);
@@ -212,9 +278,13 @@
     #send-btn:disabled { opacity: .35; cursor: not-allowed; }
     #send-btn svg { width: 16px; height: 16px; }
 
-    #voice-status { font-size: 12px; color: var(--et-accent); padding: 6px 0 0; min-height: 22px; }
+    #voice-status { font-size: 12px; color: var(--et-accent); padding: 6px 0 0; min-height: 20px; }
     .ws-banner { text-align: center; font-size: 12px; color: #f87171; padding: 4px 0 0; }
 
+    @keyframes bounce {
+      0%,60%,100% { transform:translateY(0); opacity:.4; }
+      30%          { transform:translateY(-5px); opacity:1; }
+    }
     @keyframes fade-up {
       from { opacity:0; transform:translateY(8px); }
       to   { opacity:1; transform:translateY(0); }
@@ -223,6 +293,7 @@
 </head>
 <body>
 
+<!-- Header -->
 <header>
   <div class="logo-mark">ET</div>
   <div class="header-text">
@@ -239,41 +310,69 @@
   </div>
 </header>
 
-<div id="messages">
-  <div class="welcome" id="welcome">
-    <div class="welcome-icon">ET</div>
-    <h2>Hello, I'm your ET Concierge</h2>
-    <p>Ask me anything about markets, ET Prime, Masterclasses, or your financial goals.</p>
-    <div class="welcome-chips">
-      <button class="chip" onclick="sendChip(this)">📈 What's happening in markets today?</button>
-      <button class="chip" onclick="sendChip(this)">🎓 I want to learn about investing</button>
-      <button class="chip" onclick="sendChip(this)">💼 Help me plan for retirement</button>
-      <button class="chip" onclick="sendChip(this)">💰 I'm new to the stock market</button>
+<!-- Main layout -->
+<div class="main-layout">
+
+  <!-- Chat column -->
+  <div class="chat-col">
+    <div id="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">ET</div>
+        <h2>Hello, I'm your ET Concierge</h2>
+        <p>Ask me anything about markets, ET Prime, Masterclasses, or your financial goals.</p>
+        <div class="welcome-chips">
+          <button class="chip" onclick="sendChip(this)">📈 What's happening in markets today?</button>
+          <button class="chip" onclick="sendChip(this)">🎓 I want to learn about investing</button>
+          <button class="chip" onclick="sendChip(this)">💼 Help me plan for retirement</button>
+          <button class="chip" onclick="sendChip(this)">💰 I'm new to the stock market</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input area -->
+    <div class="input-area">
+
+      <!-- [FEATURE 1] Judge scenario chips -->
+      <div class="judge-chips">
+        <button class="judge-chip" onclick="sendQuery('I am a 28-year-old salaried professional visiting ET for the first time. I have never invested beyond a savings account and I am vaguely aware of SIPs.')">🧪 Cold Start Onboarding</button>
+        <button class="judge-chip" onclick="sendQuery('How can I do tax saving this year? I am in the 30% tax bracket.')">💸 Tax Saving Cross-Sell</button>
+        <button class="judge-chip" onclick="sendQuery('What are the latest ET Markets updates? What is happening with Nifty today?')">📊 Market News RAG Test</button>
+      </div>
+
+      <div class="input-wrap">
+        <textarea id="user-input" rows="1" placeholder="Ask your ET Concierge anything… or press 🎤 to speak" autocomplete="off"></textarea>
+        <button id="mic-btn" class="disabled" title="Initialising microphone…">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2" width="6" height="11" rx="3"/>
+            <path d="M5 10a7 7 0 0 0 14 0"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="8"  y1="22" x2="16" y2="22"/>
+          </svg>
+        </button>
+        <button id="send-btn" title="Send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <div id="voice-status"></div>
+      <div class="ws-banner" id="ws-banner" style="display:none">⚠ Disconnected — retrying…</div>
     </div>
   </div>
-</div>
 
-<div class="input-area">
-  <div class="input-wrap">
-    <textarea id="user-input" rows="1" placeholder="Ask your ET Concierge anything… or press 🎤 to speak" autocomplete="off"></textarea>
-    <button id="mic-btn" class="disabled" title="Initialising microphone…">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="9" y="2" width="6" height="11" rx="3"/>
-        <path d="M5 10a7 7 0 0 0 14 0"/>
-        <line x1="12" y1="19" x2="12" y2="22"/>
-        <line x1="8"  y1="22" x2="16" y2="22"/>
-      </svg>
-    </button>
-    <button id="send-btn" title="Send">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="22" y1="2" x2="11" y2="13"/>
-        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-      </svg>
-    </button>
+  <!-- [FEATURE 2] Transparency panel -->
+  <div class="agent-panel">
+    <div class="panel-header">
+      <div class="panel-live-dot"></div>
+      Agent State
+    </div>
+    <div id="agent-log">
+      <div class="log-empty">Agent logs will appear here as the system processes your query.</div>
+    </div>
   </div>
-  <div id="voice-status"></div>
-  <div class="ws-banner" id="ws-banner" style="display:none">⚠ Disconnected — retrying…</div>
-</div>
+
+</div><!-- end main-layout -->
 
 <script>
   const messagesEl   = document.getElementById('messages');
@@ -286,6 +385,7 @@
   const ttsTrack     = document.getElementById('tts-track');
   const ttsLabel     = document.getElementById('tts-label');
   const personaBadge = document.getElementById('persona-badge');
+  const agentLog     = document.getElementById('agent-log');
 
   const TEXT_WS_URL  = 'ws://localhost:8000/ws';
   const VOICE_WS_URL = 'ws://localhost:8000/ws/voice';
@@ -298,6 +398,138 @@
   let lastBotBubble   = null;
   let currentBubble   = null;
   let rawBotResponse  = '';
+
+  // ── [FEATURE 3] Contextual latency messages per route ───────────────────────
+  const LATENCY_MSGS = {
+    learning: [
+      '🔍 Classifying your intent...',
+      '🎓 Routing to Learning Agent...',
+      '📚 Scanning ET Masterclass catalog...',
+      '🧠 Matching learning path to your profile...',
+      '✍️ Generating personalised response...',
+    ],
+    wealth: [
+      '🔍 Classifying your intent...',
+      '💼 Routing to Wealth Agent...',
+      '📊 Querying ET Markets via FAISS...',
+      '🏦 Parsing Account Aggregator sandbox...',
+      '🔎 Identifying portfolio gaps...',
+      '✍️ Generating personalised response...',
+    ],
+    news: [
+      '🔍 Classifying your intent...',
+      '📰 Routing to News Agent...',
+      '🗃️ Scanning ET article FAISS index...',
+      '📡 Retrieving latest market updates...',
+      '✍️ Generating personalised response...',
+    ],
+    tax: [
+      '🔍 Classifying your intent...',
+      '🧾 Routing to Tax Agent...',
+      '📂 Fetching tax-saving instruments...',
+      '💰 Checking ELSS and 80C options...',
+      '✍️ Generating personalised response...',
+    ],
+    default: [
+      '🔍 Classifying your intent...',
+      '🤖 Routing to specialist agent...',
+      '✍️ Generating personalised response...',
+    ],
+  };
+
+  let latencyInterval = null;
+  let latencyMsgIdx   = 0;
+  let currentRoute    = 'default';
+
+  function startLatency(route) {
+    clearInterval(latencyInterval);
+    latencyInterval = null;
+
+    const existingRow = document.getElementById('typing-row');
+    if (existingRow) {
+      const el = existingRow.querySelector('#latency-text');
+      if (el) {
+        currentRoute  = route || 'default';
+        latencyMsgIdx = 0;
+        const msgs = LATENCY_MSGS[currentRoute] || LATENCY_MSGS.default;
+        el.textContent = msgs[0];
+        latencyInterval = setInterval(() => {
+          latencyMsgIdx = (latencyMsgIdx + 1) % msgs.length;
+          const t = document.getElementById('latency-text');
+          if (t) t.textContent = msgs[latencyMsgIdx];
+        }, 1800);
+      }
+      return;
+    }
+
+    currentRoute  = route || 'default';
+    latencyMsgIdx = 0;
+    const msgs    = LATENCY_MSGS[currentRoute] || LATENCY_MSGS.default;
+
+    removeWelcome();
+    const row    = document.createElement('div');
+    row.className = 'msg-row bot'; row.id = 'typing-row';
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar bot'; avatar.textContent = 'ET';
+    // FIX: use .msg-col so the latency bubble is also width-constrained
+    const col = document.createElement('div');
+    col.className = 'msg-col';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble bot latency-indicator';
+    bubble.innerHTML = `
+      <div class="latency-dots">
+        <div class="latency-dot"></div>
+        <div class="latency-dot"></div>
+        <div class="latency-dot"></div>
+      </div>
+      <span class="latency-text" id="latency-text">${msgs[0]}</span>`;
+    col.appendChild(bubble);
+    // FIX: same DOM order as appendBubble — avatar then col
+    row.appendChild(avatar);
+    row.appendChild(col);
+
+    const allRows  = messagesEl.querySelectorAll('.msg-row.user');
+    const lastUser = allRows[allRows.length - 1];
+    if (lastUser && lastUser.nextSibling) {
+      messagesEl.insertBefore(row, lastUser.nextSibling);
+    } else {
+      messagesEl.appendChild(row);
+    }
+    scrollBottom();
+
+    latencyInterval = setInterval(() => {
+      latencyMsgIdx = (latencyMsgIdx + 1) % msgs.length;
+      const el = document.getElementById('latency-text');
+      if (el) el.textContent = msgs[latencyMsgIdx];
+    }, 1800);
+  }
+
+  function stopLatency() {
+    clearInterval(latencyInterval);
+    latencyInterval = null;
+    const t = document.getElementById('typing-row');
+    if (t) t.remove();
+  }
+
+  // ── [FEATURE 2] Agent log panel ───────────────────────────────────────────────
+  function addLog(message, type) {
+    const empty = agentLog.querySelector('.log-empty');
+    if (empty) empty.remove();
+
+    const entry = document.createElement('div');
+    entry.className = 'log-entry' + (type ? ` ${type}` : '');
+
+    const now  = new Date();
+    const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    entry.textContent = `[${time}] ${message}`;
+
+    agentLog.appendChild(entry);
+    agentLog.scrollTop = agentLog.scrollHeight;
+  }
+
+  function clearLog() {
+    agentLog.innerHTML = '';
+  }
 
   // ── Markdown renderer ────────────────────────────────────────────────────────
   function renderMarkdown(text) {
@@ -355,16 +587,16 @@
     const w = document.getElementById('welcome'); if (w) w.remove();
   }
 
+  // FIX: unified appendBubble — always avatar then col, row-reverse on .user handles visual flip
   function appendBubble(role, html, routeTag) {
     removeWelcome();
-    const row    = document.createElement('div');
+    const row = document.createElement('div');
     row.className = `msg-row ${role}`;
 
     const avatar = document.createElement('div');
     avatar.className = `avatar ${role}`;
     avatar.textContent = role === 'bot' ? 'ET' : 'Y';
 
-    // FIX: use .msg-col class so max-width applies to both bot and user equally
     const col = document.createElement('div');
     col.className = 'msg-col';
 
@@ -382,7 +614,7 @@
       col.appendChild(tag);
     }
 
-    // FIX: both roles use the same order: avatar, col — row-reverse handles user flip
+    // Same DOM order for both roles — CSS row-reverse flips user visually
     row.appendChild(avatar);
     row.appendChild(col);
 
@@ -391,25 +623,15 @@
     return bubble;
   }
 
-  function showTyping() {
-    removeWelcome();
-    const row    = document.createElement('div');
-    row.className = 'msg-row bot'; row.id = 'typing-row';
-    const avatar = document.createElement('div');
-    avatar.className = 'avatar bot'; avatar.textContent = 'ET';
-    const col = document.createElement('div');
-    col.className = 'msg-col';
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble bot typing-indicator';
-    bubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-    col.appendChild(bubble);
-    row.appendChild(avatar);
-    row.appendChild(col);
-    messagesEl.appendChild(row); scrollBottom();
-  }
-
-  function hideTyping() { const t = document.getElementById('typing-row'); if (t) t.remove(); }
   function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+  // ── [FEATURE 1] Judge chip send ───────────────────────────────────────────────
+  function sendQuery(text) {
+    input.value = text;
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    sendMessage();
+  }
 
   // ── Text input / send ─────────────────────────────────────────────────────────
   input.addEventListener('input', () => {
@@ -433,7 +655,11 @@
     appendBubble('user', text);
     input.value = ''; input.style.height = 'auto';
     sendBtn.disabled = true;
-    showTyping();
+
+    clearLog();
+    addLog('User query received.', 'router');
+    startLatency('default');
+
     textSocket.send(JSON.stringify({ message: text }));
   }
 
@@ -445,18 +671,40 @@
       wsBanner.style.display = 'none';
       clearTimeout(reconnectTimer);
     };
+
     textSocket.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
+
+      if (data.type === 'log') {
+        const isRouter   = data.message.includes('Detected persona') || data.message.includes('Classifying');
+        const isComplete = data.message.includes('✅');
+        const isError    = data.message.includes('❌');
+        addLog(
+          data.message,
+          isError ? 'error' : isComplete ? 'highlight' : isRouter ? 'router' : ''
+        );
+
+        if (data.message.includes('Learning Agent'))  { stopLatency(); startLatency('learning'); }
+        if (data.message.includes('Wealth Agent'))    { stopLatency(); startLatency('wealth'); }
+        if (data.message.includes('News Agent'))      { stopLatency(); startLatency('news'); }
+        if (data.message.includes('Tax Agent'))       { stopLatency(); startLatency('tax'); }
+        return;
+      }
+
       if (data.type === 'start') {
-        hideTyping(); rawBotResponse = '';
+        stopLatency();
+        rawBotResponse  = '';
         streamingBubble = appendBubble('bot', '');
       }
+
       if (data.type === 'chunk' && streamingBubble) {
         rawBotResponse += data.content;
         streamingBubble.innerHTML = renderMarkdown(rawBotResponse);
         scrollBottom();
       }
+
       if (data.type === 'end' && streamingBubble) {
+        stopLatency();
         sendBtn.disabled = false; input.focus();
         if (data.persona) updatePersonaBadge(data.persona);
         if (data.route) {
@@ -468,9 +716,11 @@
         speakText(lastBotText, lastBotBubble);
       }
     };
+
     textSocket.onclose = () => {
       statusDot.className = 'status-dot disconnected';
       wsBanner.style.display = 'block'; sendBtn.disabled = true;
+      stopLatency();
       reconnectTimer = setTimeout(connectTextWS, 3000);
     };
     textSocket.onerror = () => textSocket.close();
