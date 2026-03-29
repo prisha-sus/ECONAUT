@@ -1,3 +1,29 @@
+
+# ET AI Concierge — Member 4 Dependencies
+# Install with: pip install -r requirements.txt
+
+# ── Core Memory: Letta (MemGPT) ──────────────────────────────────────────────
+# Provides persistent cross-session user memory (risk appetite, goals, profile)
+# Phase 3 requirement
+letta>=0.3.0
+
+# ── NeMo Guardrails ───────────────────────────────────────────────────────────
+# NVIDIA NeMo Guardrails for topical control (financial queries only)
+# Phase 2 requirement
+nemoguardrails>=0.9.0
+
+# ── Standard Library (no install needed) ──────────────────────────────────────
+# sqlite3  — built-in, used as fallback persistence
+# uuid     — built-in, for session ID generation
+# logging  — built-in
+# json     — built-in
+# pathlib  — built-in
+
+# ── Optional: LLM backend for NeMo Guardrails ─────────────────────────────────
+# NeMo Guardrails requires an LLM. For local/dev use with OpenAI:
+# openai>=1.0.0
+# For offline/hackathon use, NeMo also supports local models via ollama.
+=======
 # Agent Frameworks (Pick one or both based on your final choice)
 langgraph>=0.0.26
 crewai>=0.28.8
@@ -19,3 +45,4 @@ pydantic>=2.6.4
 # API frameworks (If you plan to serve it as an endpoint or use Generative UI)
 fastapi>=0.110.0
 uvicorn>=0.29.0
+
