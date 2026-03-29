@@ -14,6 +14,8 @@ env.bak/
 venv.bak/
 audio/
 *.mp3
+tools/ffmpeg/
+tools/ffmpeg.zip
 
 # Python
 __pycache__/
