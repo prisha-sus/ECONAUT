@@ -5,6 +5,9 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
+# ── Phase 2: import voice pipeline ────────────────────────────────────────────
+from .voice_pipeline import handle_voice_websocket
+
 load_dotenv()
 
 app = FastAPI(title="ET AI Concierge - Backend")
@@ -17,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Dummy echo handler (swap this out once Member 1's agent is ready) ──────────
+# ── Phase 1: Text WebSocket ────────────────────────────────────────────────────
 async def get_agent_response(message: str) -> str:
     """
     MOCK RESPONSE — Replace this function body with:
@@ -25,7 +28,7 @@ async def get_agent_response(message: str) -> str:
         return await run_agent(message)
     once Member 1's LangGraph agent is wired up.
     """
-    await asyncio.sleep(0.8)  # simulate LLM latency
+    await asyncio.sleep(0.8)
     return (
         f"[MOCK] ET Concierge received: '{message}'. "
         "Plug in Member 1's LangGraph agent here."
@@ -45,7 +48,6 @@ async def websocket_endpoint(websocket: WebSocket):
             if not user_message.strip():
                 continue
 
-            # Simulate streaming by sending the response word-by-word
             response = await get_agent_response(user_message)
             words = response.split(" ")
 
@@ -67,6 +69,13 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.close()
 
 
+# ── Phase 2: Voice WebSocket (NEW) ────────────────────────────────────────────
+@app.websocket("/ws/voice")
+async def voice_endpoint(websocket: WebSocket):
+    await handle_voice_websocket(websocket)
+
+
+# ── Health check ───────────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "ET Concierge WebSocket Backend"}
