@@ -18,324 +18,247 @@
       --user-bg:   #E2231A;
       --bot-bg:    #1E1E1E;
       --radius:    14px;
-      --input-h:   52px;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'DM Sans', sans-serif;
-      background: var(--et-dark);
-      color: var(--et-text);
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      background: var(--et-dark); color: var(--et-text);
+      height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
     }
 
-    /* ── Header ───────────────────────────────────────────────── */
+    /* ── Header ── */
     header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--et-border);
-      flex-shrink: 0;
-      background: rgba(15,15,15,0.96);
-      backdrop-filter: blur(12px);
-      position: relative;
-      z-index: 10;
+      display: flex; align-items: center; gap: 14px; padding: 16px 24px;
+      border-bottom: 1px solid var(--et-border); flex-shrink: 0;
+      background: rgba(15,15,15,0.96); backdrop-filter: blur(12px); z-index: 10;
     }
-
     .logo-mark {
-      width: 38px; height: 38px;
-      background: var(--et-red);
-      border-radius: 10px;
-      display: grid; place-items: center;
-      font-family: 'DM Serif Display', serif;
-      font-size: 18px;
-      font-weight: 400;
-      color: #fff;
-      flex-shrink: 0;
+      width: 38px; height: 38px; background: var(--et-red); border-radius: 10px;
+      display: grid; place-items: center; font-family: 'DM Serif Display', serif;
+      font-size: 18px; color: #fff; flex-shrink: 0;
+    }
+    .header-text h1 { font-family: 'DM Serif Display', serif; font-size: 17px; font-weight: 400; line-height: 1.2; }
+    .header-text p  { font-size: 12px; color: var(--et-muted); font-weight: 300; }
+    .header-right   { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+    /* Persona badge in header */
+    #persona-badge {
+      font-size: 11px; padding: 3px 10px;
+      background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.25);
+      border-radius: 100px; color: var(--et-accent);
+      display: none;
     }
 
-    .header-text h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 17px;
-      font-weight: 400;
-      letter-spacing: 0.01em;
-      line-height: 1.2;
+    .tts-toggle-wrap {
+      display: flex; align-items: center; gap: 7px; font-size: 12px;
+      color: var(--et-muted); cursor: pointer; user-select: none;
     }
-
-    .header-text p {
-      font-size: 12px;
-      color: var(--et-muted);
-      font-weight: 300;
+    .toggle-track {
+      position: relative; width: 32px; height: 18px;
+      background: rgba(255,255,255,0.12); border-radius: 9px;
+      transition: background 0.2s; flex-shrink: 0;
     }
+    .toggle-track.on { background: var(--et-red); }
+    .toggle-thumb {
+      position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+      border-radius: 50%; background: #fff; transition: transform 0.2s; pointer-events: none;
+    }
+    .toggle-track.on .toggle-thumb { transform: translateX(14px); }
 
     .status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #4ade80;
-      margin-left: auto;
-      flex-shrink: 0;
-      animation: pulse-dot 2s ease-in-out infinite;
+      width: 8px; height: 8px; border-radius: 50%; background: #4ade80;
+      flex-shrink: 0; animation: pulse-dot 2s ease-in-out infinite;
     }
     .status-dot.disconnected { background: #f87171; animation: none; }
-
     @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.6; transform: scale(0.85); }
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.6; transform:scale(.85); }
     }
 
-    /* ── Messages area ───────────────────────────────────────── */
+    /* ── Messages ── */
     #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      scroll-behavior: smooth;
+      flex: 1; overflow-y: auto; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth;
     }
-
     #messages::-webkit-scrollbar { width: 4px; }
     #messages::-webkit-scrollbar-thumb { background: var(--et-border); border-radius: 4px; }
 
-    /* Welcome splash */
     .welcome {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      flex: 1;
-      text-align: center;
-      padding: 40px 24px;
-      animation: fade-up 0.5s ease both;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 10px; flex: 1;
+      text-align: center; padding: 40px 24px; animation: fade-up 0.5s ease both;
     }
-
     .welcome-icon {
-      width: 64px; height: 64px;
-      background: linear-gradient(135deg, var(--et-red), #a0160f);
-      border-radius: 20px;
-      display: grid; place-items: center;
-      font-family: 'DM Serif Display', serif;
-      font-size: 28px;
-      color: #fff;
-      margin-bottom: 8px;
+      width: 64px; height: 64px; background: linear-gradient(135deg, var(--et-red), #a0160f);
+      border-radius: 20px; display: grid; place-items: center;
+      font-family: 'DM Serif Display', serif; font-size: 28px; color: #fff; margin-bottom: 8px;
     }
-
-    .welcome h2 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 24px;
-      font-weight: 400;
-    }
-
-    .welcome p {
-      font-size: 14px;
-      color: var(--et-muted);
-      max-width: 300px;
-      line-height: 1.6;
-    }
-
-    .welcome-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin-top: 8px;
-    }
-
+    .welcome h2 { font-family: 'DM Serif Display', serif; font-size: 24px; font-weight: 400; }
+    .welcome p  { font-size: 14px; color: var(--et-muted); max-width: 300px; line-height: 1.6; }
+    .welcome-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
     .chip {
-      padding: 8px 14px;
-      background: var(--et-card);
-      border: 1px solid var(--et-border);
-      border-radius: 100px;
-      font-size: 13px;
-      color: var(--et-text);
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
+      padding: 8px 14px; background: var(--et-card); border: 1px solid var(--et-border);
+      border-radius: 100px; font-size: 13px; color: var(--et-text);
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
     }
+    .chip:hover { border-color: rgba(226,35,26,0.5); background: rgba(226,35,26,0.08); }
 
-    .chip:hover {
-      border-color: rgba(226,35,26,0.5);
-      background: rgba(226,35,26,0.08);
-    }
-
-    /* Message bubbles */
-    .msg-row {
-      display: flex;
-      gap: 10px;
-      animation: fade-up 0.25s ease both;
-    }
-
+    /* ── Message rows ── */
+    .msg-row { display: flex; gap: 10px; animation: fade-up 0.25s ease both; }
     .msg-row.user { flex-direction: row-reverse; }
-
     .avatar {
-      width: 32px; height: 32px;
-      border-radius: 10px;
-      flex-shrink: 0;
-      display: grid; place-items: center;
-      font-size: 13px;
-      font-weight: 600;
+      width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+      display: grid; place-items: center; font-size: 13px; font-weight: 600;
     }
-
-    .avatar.bot {
-      background: var(--et-red);
-      font-family: 'DM Serif Display', serif;
-      color: #fff;
-    }
-
-    .avatar.user {
-      background: rgba(255,255,255,0.08);
-      color: var(--et-muted);
-    }
+    .avatar.bot  { background: var(--et-red); font-family: 'DM Serif Display', serif; color: #fff; }
+    .avatar.user { background: rgba(255,255,255,0.08); color: var(--et-muted); }
 
     .bubble {
-      max-width: min(72%, 520px);
-      padding: 11px 15px;
-      border-radius: var(--radius);
-      font-size: 14.5px;
-      line-height: 1.65;
-      word-break: break-word;
+      max-width: min(72%, 560px); padding: 12px 15px; border-radius: var(--radius);
+      font-size: 14.5px; line-height: 1.7; word-break: break-word; position: relative;
+    }
+    .bubble.bot  { background: var(--bot-bg); border: 1px solid var(--et-border); border-bottom-left-radius: 4px; }
+    .bubble.user { background: var(--user-bg); border-bottom-right-radius: 4px; color: #fff; }
+
+    /* Markdown-style rendering inside bot bubbles */
+    .bubble.bot strong { font-weight: 600; color: #fff; }
+    .bubble.bot ol, .bubble.bot ul { padding-left: 18px; margin: 6px 0; }
+    .bubble.bot li { margin-bottom: 4px; }
+    .bubble.bot a  { color: var(--et-accent); text-decoration: none; border-bottom: 1px solid rgba(245,166,35,0.3); }
+    .bubble.bot a:hover { border-color: var(--et-accent); }
+    .bubble.bot .mc-card {
+      margin-top: 10px; padding: 10px 12px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--et-border);
+      border-radius: 10px; font-size: 13px;
+    }
+    .bubble.bot .mc-card strong { display: block; margin-bottom: 2px; color: var(--et-accent); font-size: 13px; }
+    .bubble.bot .mc-card a { font-size: 12px; }
+
+    /* Route tag below bot bubble */
+    .route-tag {
+      font-size: 10px; color: var(--et-muted); margin-top: 5px;
+      padding: 0 2px; letter-spacing: 0.03em;
     }
 
-    .bubble.bot {
-      background: var(--bot-bg);
-      border: 1px solid var(--et-border);
-      border-bottom-left-radius: 4px;
-      color: var(--et-text);
+    /* Speaking animation */
+    .bubble.bot.speaking { border-color: rgba(226,35,26,0.45); }
+    .bubble.bot.speaking::after {
+      content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px;
+      background: var(--et-red); border-radius: 0 0 4px 4px;
+      animation: speaking-bar 1s ease-in-out infinite;
     }
-
-    .bubble.user {
-      background: var(--user-bg);
-      border-bottom-right-radius: 4px;
-      color: #fff;
+    @keyframes speaking-bar {
+      0%,100% { opacity:.3; transform:scaleX(.3); transform-origin:left; }
+      50%      { opacity:1;  transform:scaleX(1);  transform-origin:left; }
     }
 
     /* Typing indicator */
-    .typing-indicator {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 14px 16px;
-    }
-
-    .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--et-muted);
-      animation: bounce 1.2s infinite;
-    }
-    .dot:nth-child(2) { animation-delay: 0.15s; }
-    .dot:nth-child(3) { animation-delay: 0.30s; }
-
+    .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 14px 16px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--et-muted); animation: bounce 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: .15s; }
+    .dot:nth-child(3) { animation-delay: .30s; }
     @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-      30%            { transform: translateY(-5px); opacity: 1; }
+      0%,60%,100% { transform:translateY(0); opacity:.4; }
+      30%          { transform:translateY(-5px); opacity:1; }
     }
 
-    /* ── Input bar ───────────────────────────────────────────── */
+    /* ── Input area ── */
     .input-area {
-      padding: 14px 20px 20px;
-      border-top: 1px solid var(--et-border);
-      flex-shrink: 0;
-      background: rgba(15,15,15,0.97);
+      padding: 14px 20px 20px; border-top: 1px solid var(--et-border);
+      flex-shrink: 0; background: rgba(15,15,15,0.97);
     }
-
     .input-wrap {
-      display: flex;
-      align-items: flex-end;
-      gap: 10px;
-      background: var(--et-card);
-      border: 1px solid var(--et-border);
-      border-radius: var(--radius);
-      padding: 8px 8px 8px 16px;
-      transition: border-color 0.2s;
+      display: flex; align-items: flex-end; gap: 10px;
+      background: var(--et-card); border: 1px solid var(--et-border);
+      border-radius: var(--radius); padding: 8px 8px 8px 16px; transition: border-color 0.2s;
     }
-
     .input-wrap:focus-within { border-color: rgba(226,35,26,0.5); }
-
     #user-input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      color: var(--et-text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14.5px;
-      line-height: 1.5;
-      resize: none;
-      max-height: 120px;
-      min-height: 36px;
-      padding: 4px 0;
+      flex: 1; background: none; border: none; outline: none; color: var(--et-text);
+      font-family: 'DM Sans', sans-serif; font-size: 14.5px; line-height: 1.5;
+      resize: none; max-height: 120px; min-height: 36px; padding: 4px 0;
     }
-
     #user-input::placeholder { color: var(--et-muted); }
 
+    #mic-btn {
+      width: 36px; height: 36px; border: none; border-radius: 10px;
+      background: rgba(255,255,255,0.06); color: var(--et-muted);
+      cursor: pointer; display: grid; place-items: center; flex-shrink: 0;
+      transition: background 0.2s, color 0.2s; user-select: none; -webkit-user-select: none;
+    }
+    #mic-btn:hover  { background: rgba(255,255,255,0.1); color: var(--et-text); }
+    #mic-btn.ready  { color: rgba(255,255,255,0.6); }
+    #mic-btn.recording { background: rgba(226,35,26,0.2); color: var(--et-red); animation: mic-pulse 1s ease-in-out infinite; }
+    #mic-btn.disabled  { opacity: .3; cursor: not-allowed; }
+    #mic-btn svg { width: 16px; height: 16px; pointer-events: none; }
+    @keyframes mic-pulse {
+      0%,100% { box-shadow:0 0 0 0 rgba(226,35,26,.4); }
+      50%      { box-shadow:0 0 0 6px rgba(226,35,26,0); }
+    }
+
     #send-btn {
-      width: 36px; height: 36px;
-      border: none;
-      border-radius: 10px;
-      background: var(--et-red);
-      color: #fff;
-      cursor: pointer;
-      display: grid; place-items: center;
-      flex-shrink: 0;
+      width: 36px; height: 36px; border: none; border-radius: 10px;
+      background: var(--et-red); color: #fff; cursor: pointer;
+      display: grid; place-items: center; flex-shrink: 0;
       transition: opacity 0.15s, transform 0.1s;
     }
-
-    #send-btn:hover  { opacity: 0.85; }
-    #send-btn:active { transform: scale(0.93); }
-    #send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
+    #send-btn:hover  { opacity: .85; }
+    #send-btn:active { transform: scale(.93); }
+    #send-btn:disabled { opacity: .35; cursor: not-allowed; }
     #send-btn svg { width: 16px; height: 16px; }
 
-    .ws-banner {
-      text-align: center;
-      font-size: 12px;
-      color: #f87171;
-      padding: 6px 0 0;
-    }
+    #voice-status { font-size: 12px; color: var(--et-accent); padding: 6px 0 0; min-height: 22px; }
+    .ws-banner { text-align: center; font-size: 12px; color: #f87171; padding: 4px 0 0; }
 
     @keyframes fade-up {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:translateY(0); }
     }
   </style>
 </head>
 <body>
 
-<!-- Header -->
 <header>
   <div class="logo-mark">ET</div>
   <div class="header-text">
     <h1>ET AI Concierge</h1>
     <p>Your personal Economic Times guide</p>
   </div>
-  <div class="status-dot" id="status-dot" title="Connecting..."></div>
+  <div class="header-right">
+    <span id="persona-badge"></span>
+    <label class="tts-toggle-wrap">
+      <div class="toggle-track on" id="tts-track"><div class="toggle-thumb"></div></div>
+      <span id="tts-label">Voice on</span>
+    </label>
+    <div class="status-dot" id="status-dot"></div>
+  </div>
 </header>
 
-<!-- Messages -->
 <div id="messages">
   <div class="welcome" id="welcome">
     <div class="welcome-icon">ET</div>
     <h2>Hello, I'm your ET Concierge</h2>
     <p>Ask me anything about markets, ET Prime, Masterclasses, or your financial goals.</p>
     <div class="welcome-chips">
-      <button class="chip" onclick="sendChip(this)">📈 What's trending in markets?</button>
-      <button class="chip" onclick="sendChip(this)">🎓 Explore Masterclasses</button>
+      <button class="chip" onclick="sendChip(this)">📈 What's happening in markets today?</button>
+      <button class="chip" onclick="sendChip(this)">🎓 I want to learn about investing</button>
       <button class="chip" onclick="sendChip(this)">💼 Help me plan for retirement</button>
-      <button class="chip" onclick="sendChip(this)">🔍 Find me ET Prime content</button>
+      <button class="chip" onclick="sendChip(this)">💰 I'm new to the stock market</button>
     </div>
   </div>
 </div>
 
-<!-- Input -->
 <div class="input-area">
   <div class="input-wrap">
-    <textarea id="user-input" rows="1" placeholder="Ask your ET Concierge anything…" autocomplete="off"></textarea>
+    <textarea id="user-input" rows="1" placeholder="Ask your ET Concierge anything… or press 🎤 to speak" autocomplete="off"></textarea>
+    <button id="mic-btn" class="disabled" title="Initialising microphone…">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="11" rx="3"/>
+        <path d="M5 10a7 7 0 0 0 14 0"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="8"  y1="22" x2="16" y2="22"/>
+      </svg>
+    </button>
     <button id="send-btn" title="Send">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="22" y1="2" x2="11" y2="13"/>
@@ -343,172 +266,309 @@
       </svg>
     </button>
   </div>
-  <div class="ws-banner" id="ws-banner" style="display:none">
-    ⚠ Disconnected from server — retrying…
-  </div>
+  <div id="voice-status"></div>
+  <div class="ws-banner" id="ws-banner" style="display:none">⚠ Disconnected — retrying…</div>
 </div>
 
 <script>
-  const messagesEl  = document.getElementById('messages');
-  const input       = document.getElementById('user-input');
-  const sendBtn     = document.getElementById('send-btn');
-  const statusDot   = document.getElementById('status-dot');
-  const wsBanner    = document.getElementById('ws-banner');
-  const WS_URL      = 'ws://localhost:8000/ws';
+  // ── DOM refs ─────────────────────────────────────────────────────────────────
+  const messagesEl    = document.getElementById('messages');
+  const input         = document.getElementById('user-input');
+  const sendBtn       = document.getElementById('send-btn');
+  const micBtn        = document.getElementById('mic-btn');
+  const statusDot     = document.getElementById('status-dot');
+  const wsBanner      = document.getElementById('ws-banner');
+  const voiceStatus   = document.getElementById('voice-status');
+  const ttsTrack      = document.getElementById('tts-track');
+  const ttsLabel      = document.getElementById('tts-label');
+  const personaBadge  = document.getElementById('persona-badge');
 
-  let socket        = null;
+  const TEXT_WS_URL   = 'ws://localhost:8000/ws';
+  const VOICE_WS_URL  = 'ws://localhost:8000/ws/voice';
+
+  let textSocket      = null;
   let streamingBubble = null;
   let reconnectTimer  = null;
+  let ttsEnabled      = true;
+  let lastBotText     = '';
+  let lastBotBubble   = null;
+  let currentBubble   = null;
 
-  // ── Auto-resize textarea ───────────────────────────────────────
-  input.addEventListener('input', () => {
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-  });
+  // ── Markdown-lite renderer ───────────────────────────────────────────────────
+  // Converts **bold**, numbered lists, bullet lists, and URLs into HTML
+  function renderMarkdown(text) {
+    let html = text
+      // Escape HTML special chars first
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      // **bold**
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Bare URLs → clickable links
+      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
+      // Numbered list lines: "1. text"
+      .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
+      // Bullet list lines: "- text" or "• text"
+      .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
 
-  // ── Send on Enter (Shift+Enter = newline) ──────────────────────
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+    // Wrap consecutive <li> groups in <ol> or <ul>
+    html = html.replace(/(<li>.*?<\/li>(\n|$))+/gs, match => `<ul>${match}</ul>`);
+
+    // Line breaks → <br> (but not inside list tags)
+    html = html.replace(/\n(?!<)/g, '<br>');
+
+    return html;
+  }
+
+  // ── TTS ──────────────────────────────────────────────────────────────────────
+  ttsTrack.addEventListener('click', () => {
+    ttsEnabled = !ttsEnabled;
+    ttsTrack.classList.toggle('on', ttsEnabled);
+    ttsLabel.textContent = ttsEnabled ? 'Voice on' : 'Voice off';
+    if (!ttsEnabled) {
+      stopSpeaking();
+    } else if (lastBotText && lastBotBubble) {
+      speakText(lastBotText, lastBotBubble);
     }
   });
 
-  sendBtn.addEventListener('click', sendMessage);
-
-  // ── Quick-chip handler ─────────────────────────────────────────
-  function sendChip(btn) {
-    const text = btn.innerText.replace(/^[\p{Emoji}\s]+/u, '').trim();
-    input.value = text;
-    sendMessage();
+  function stopSpeaking() {
+    window.speechSynthesis.cancel();
+    if (currentBubble) { currentBubble.classList.remove('speaking'); currentBubble = null; }
   }
 
-  // ── Remove welcome splash on first message ─────────────────────
+  function speakText(text, bubble) {
+    if (!ttsEnabled || !text.trim()) return;
+    stopSpeaking();
+    // Strip markdown symbols for clean speech
+    const clean = text.replace(/\*\*/g, '').replace(/\n/g, ' ').replace(/https?:\/\/\S+/g, '').trim();
+    const utter  = new SpeechSynthesisUtterance(clean);
+    utter.rate   = 1.05; utter.pitch = 1.0; utter.lang = 'en-IN';
+    utter.onstart = () => { currentBubble = bubble; bubble.classList.add('speaking'); };
+    utter.onend   = () => { bubble.classList.remove('speaking'); currentBubble = null; };
+    utter.onerror = () => { bubble.classList.remove('speaking'); currentBubble = null; };
+    window.speechSynthesis.speak(utter);
+  }
+
+  // ── Persona badge ────────────────────────────────────────────────────────────
+  const PERSONA_LABELS = {
+    first_time_investor: '🌱 First-time investor',
+    experienced_investor: '📊 Experienced investor',
+    unknown: null,
+  };
+
+  function updatePersonaBadge(persona) {
+    const label = PERSONA_LABELS[persona];
+    if (label) {
+      personaBadge.textContent = label;
+      personaBadge.style.display = 'inline-block';
+    }
+  }
+
+  // ── UI helpers ────────────────────────────────────────────────────────────────
+  function setVoiceStatus(msg) { voiceStatus.textContent = msg; }
+
   function removeWelcome() {
     const w = document.getElementById('welcome');
     if (w) w.remove();
   }
 
-  // ── Append a message bubble ────────────────────────────────────
-  function appendBubble(role, text) {
+  function appendBubble(role, html, routeTag) {
     removeWelcome();
-    const row = document.createElement('div');
+    const row    = document.createElement('div');
     row.className = `msg-row ${role}`;
-
     const avatar = document.createElement('div');
     avatar.className = `avatar ${role}`;
-    avatar.textContent = role === 'bot' ? 'ET' : 'You'[0];
-
+    avatar.textContent = role === 'bot' ? 'ET' : 'Y';
+    const col    = document.createElement('div');   // column wrapper for bubble + tag
+    col.style.cssText = 'display:flex;flex-direction:column;gap:0';
     const bubble = document.createElement('div');
     bubble.className = `bubble ${role}`;
-    bubble.textContent = text;
+    if (role === 'bot') bubble.innerHTML = html || '';
+    else                bubble.textContent = html || '';
+    col.appendChild(bubble);
 
-    if (role === 'bot') {
-      row.appendChild(avatar);
-      row.appendChild(bubble);
-    } else {
-      row.appendChild(bubble);
-      row.appendChild(avatar);
+    if (role === 'bot' && routeTag) {
+      const tag = document.createElement('div');
+      tag.className  = 'route-tag';
+      tag.textContent = `Handled by: ${routeTag} agent`;
+      col.appendChild(tag);
     }
 
+    if (role === 'bot') { row.appendChild(avatar); row.appendChild(col); }
+    else                { row.appendChild(col); row.appendChild(avatar); }
     messagesEl.appendChild(row);
     scrollBottom();
     return bubble;
   }
 
-  // ── Typing indicator ───────────────────────────────────────────
   function showTyping() {
     removeWelcome();
-    const row = document.createElement('div');
-    row.className = 'msg-row bot';
-    row.id = 'typing-row';
-
+    const row    = document.createElement('div');
+    row.className = 'msg-row bot'; row.id = 'typing-row';
     const avatar = document.createElement('div');
-    avatar.className = 'avatar bot';
-    avatar.textContent = 'ET';
-
+    avatar.className = 'avatar bot'; avatar.textContent = 'ET';
     const bubble = document.createElement('div');
     bubble.className = 'bubble bot typing-indicator';
     bubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-
-    row.appendChild(avatar);
-    row.appendChild(bubble);
-    messagesEl.appendChild(row);
-    scrollBottom();
+    row.appendChild(avatar); row.appendChild(bubble);
+    messagesEl.appendChild(row); scrollBottom();
   }
 
   function hideTyping() {
-    const t = document.getElementById('typing-row');
-    if (t) t.remove();
+    const t = document.getElementById('typing-row'); if (t) t.remove();
   }
 
-  function scrollBottom() {
-    messagesEl.scrollTop = messagesEl.scrollHeight;
+  function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+  // ── Text WebSocket ────────────────────────────────────────────────────────────
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  sendBtn.addEventListener('click', sendMessage);
+
+  function sendChip(btn) {
+    input.value = btn.innerText.replace(/^[\p{Emoji}\s]+/u, '').trim();
+    sendMessage();
   }
 
-  // ── Send message ───────────────────────────────────────────────
   function sendMessage() {
     const text = input.value.trim();
-    if (!text || !socket || socket.readyState !== WebSocket.OPEN) return;
-
+    if (!text || !textSocket || textSocket.readyState !== WebSocket.OPEN) return;
+    stopSpeaking();
     appendBubble('user', text);
-    input.value = '';
-    input.style.height = 'auto';
+    input.value = ''; input.style.height = 'auto';
     sendBtn.disabled = true;
     showTyping();
-
-    socket.send(JSON.stringify({ message: text }));
+    textSocket.send(JSON.stringify({ message: text }));
   }
 
-  // ── WebSocket ──────────────────────────────────────────────────
-  function connect() {
-    socket = new WebSocket(WS_URL);
+  let rawBotResponse  = '';   // plain text (for TTS)
+  let htmlBotResponse = '';   // rendered HTML (for display)
 
-    socket.onopen = () => {
+  function connectTextWS() {
+    textSocket = new WebSocket(TEXT_WS_URL);
+
+    textSocket.onopen = () => {
       statusDot.className = 'status-dot';
-      statusDot.title = 'Connected';
       wsBanner.style.display = 'none';
       clearTimeout(reconnectTimer);
-      console.log('WebSocket connected');
     };
 
-    socket.onmessage = (evt) => {
+    textSocket.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
 
       if (data.type === 'start') {
         hideTyping();
+        rawBotResponse  = '';
+        htmlBotResponse = '';
         streamingBubble = appendBubble('bot', '');
       }
 
       if (data.type === 'chunk' && streamingBubble) {
-        streamingBubble.textContent += data.content;
+        rawBotResponse  += data.content;
+        // Re-render full markdown on each chunk (keeps formatting correct mid-stream)
+        streamingBubble.innerHTML = renderMarkdown(rawBotResponse);
         scrollBottom();
       }
 
-      if (data.type === 'end') {
-        streamingBubble = null;
+      if (data.type === 'end' && streamingBubble) {
         sendBtn.disabled = false;
         input.focus();
+
+        // Update persona badge if provided
+        if (data.persona) updatePersonaBadge(data.persona);
+
+        // Add route tag under the bubble
+        if (data.route) {
+          const tag = streamingBubble.nextElementSibling;
+          if (tag && tag.classList.contains('route-tag'))
+            tag.textContent = `Handled by: ${data.route} agent`;
+        }
+
+        lastBotText   = rawBotResponse;
+        lastBotBubble = streamingBubble;
+        streamingBubble = null;
+
+        speakText(lastBotText, lastBotBubble);
       }
     };
 
-    socket.onclose = () => {
+    textSocket.onclose = () => {
       statusDot.className = 'status-dot disconnected';
-      statusDot.title = 'Disconnected';
       wsBanner.style.display = 'block';
       sendBtn.disabled = true;
-      hideTyping();
-      reconnectTimer = setTimeout(connect, 3000);
-      console.log('WebSocket closed — retrying in 3s');
+      reconnectTimer = setTimeout(connectTextWS, 3000);
     };
-
-    socket.onerror = (err) => {
-      console.error('WebSocket error:', err);
-      socket.close();
-    };
+    textSocket.onerror = () => textSocket.close();
   }
 
-  connect();
+  connectTextWS();
+
+  // ── Mic / Voice WebSocket (Phase 2 — unchanged) ───────────────────────────────
+  let micStream = null, mediaRecorder = null, isRecording = false;
+
+  async function initMic() {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micBtn.classList.remove('disabled'); micBtn.classList.add('ready');
+      micBtn.title = 'Hold to speak';
+    } catch { setVoiceStatus('⚠ Microphone access denied.'); }
+  }
+  initMic();
+
+  function startRecording() {
+    if (isRecording || !micStream || micBtn.classList.contains('disabled')) return;
+    stopSpeaking();
+    isRecording = true; micBtn.classList.add('recording');
+    setVoiceStatus('🔴 Recording… release to transcribe');
+    const voiceSocket = new WebSocket(VOICE_WS_URL);
+    voiceSocket.onopen = () => {
+      mediaRecorder = new MediaRecorder(micStream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm'
+      });
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0 && voiceSocket.readyState === WebSocket.OPEN) voiceSocket.send(e.data);
+      };
+      mediaRecorder.start(250);
+    };
+    voiceSocket.onmessage = (evt) => {
+      const data = JSON.parse(evt.data);
+      if (data.type === 'transcript') {
+        const text = data.text.trim();
+        if (text) {
+          setVoiceStatus('');
+          input.value = text;
+          input.style.height = 'auto';
+          input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+          sendMessage();
+        } else {
+          setVoiceStatus('No speech detected — try again.');
+          setTimeout(() => setVoiceStatus(''), 2500);
+        }
+      }
+      if (data.type === 'error') { setVoiceStatus(`⚠ ${data.message}`); setTimeout(() => setVoiceStatus(''), 3000); }
+    };
+    voiceSocket.onerror = () => stopRecording(voiceSocket);
+    micBtn._voiceSocket = voiceSocket;
+  }
+
+  function stopRecording(explicitSocket) {
+    if (!isRecording) return;
+    isRecording = false; micBtn.classList.remove('recording');
+    setVoiceStatus('⏳ Transcribing…');
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    const vs = explicitSocket || micBtn._voiceSocket;
+    if (vs && vs.readyState === WebSocket.OPEN) vs.send(JSON.stringify({ type: 'end_of_speech' }));
+  }
+
+  micBtn.addEventListener('mousedown',  (e) => { e.preventDefault(); startRecording(); });
+  micBtn.addEventListener('mouseup',    ()  => stopRecording());
+  micBtn.addEventListener('mouseleave', ()  => { if (isRecording) stopRecording(); });
+  micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); }, { passive: false });
+  micBtn.addEventListener('touchend',   (e) => { e.preventDefault(); stopRecording(); },  { passive: false });
 </script>
 </body>
 </html>
