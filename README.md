@@ -87,7 +87,7 @@ ECONAUT has been rigorously benchmarked against the mandated Track 7 scenario de
 ---
 ## 🛡️ Enterprise Readiness
 To ensure rigorous industrial viability, ECONAUT integrates enterprise-grade guardrails:
-- **NeMo Guardrails:** Partial implement of NeMo Gaurdrails to act as an interception middleware layer directly mapping inputs against safety prompts. Malicious queries or off-topic prompts are strictly filtered before reaching the orchestration routing nodes.
+- **NeMo Guardrails:** Partial implementation of NeMo Guardrails to act as an interception middleware layer directly mapping inputs against safety prompts. Malicious queries or off-topic prompts are strictly filtered before reaching the orchestration routing nodes.
 - **Zero API Exposure:** All secret tokens and access protocols remain securely stored inside the hosting platform's environment variables (such as Render or Railway) and are omitted from public GitHub commits.
 
 ## 📊 Impact Model
