@@ -1,0 +1,35 @@
+[
+  {
+    "user_id": "u_001",
+    "persona_type": "cold_start",
+    "age": 28,
+    "financial_stage": "beginner",
+    "et_history": "none",
+    "account_aggregator_data": {
+      "linked_accounts": 2,
+      "assets": {
+        "savings_account": 850000,
+        "fixed_deposits": 150000,
+        "mutual_funds": 0,
+        "stocks": 0
+      },
+      "monthly_income": 120000
+    }
+  },
+  {
+    "user_id": "u_002",
+    "persona_type": "lapsed_prime",
+    "last_active_days_ago": 90,
+    "past_consumption": ["et_markets_daily"],
+    "subscription_status": "expired",
+    "account_aggregator_data": {
+      "linked_accounts": 4,
+      "assets": {
+        "savings_account": 200000,
+        "mutual_funds": 1500000,
+        "stocks": 800000
+      },
+      "monthly_income": 250000
+    }
+  }
+]
