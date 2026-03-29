@@ -9,20 +9,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── Make sure src/ is on the path so agents can import each other ──────────────
 sys.path.insert(0, os.path.dirname(__file__))
 
-# ── Import agents ──────────────────────────────────────────────────────────────
-from agents.router_agent   import router_agent
-from agents.learning_agent import learning_agent
-from agents.beginner_agent import beginner_agent
-from agents.wealth_agent   import wealth_agent
-from agents.news_agent     import news_agent
-from agents.tax_agent      import tax_agent
-from state.agent_state     import AgentState
-
-# ── Voice pipeline (Phase 2) ───────────────────────────────────────────────────
-from voice_pipeline import handle_voice_websocket
+from .agents.router_agent   import router_agent
+from .agents.learning_agent import learning_agent
+from .agents.beginner_agent import beginner_agent
+from .agents.wealth_agent   import wealth_agent
+from .agents.news_agent     import news_agent
+from .agents.tax_agent      import tax_agent
+from .state.agent_state     import AgentState
+from .voice_pipeline        import handle_voice_websocket
 
 app = FastAPI(title="ET AI Concierge")
 
@@ -34,7 +30,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Serve audio/ folder for TTS jingle (Phase 3) ──────────────────────────────
 AUDIO_DIR = os.path.join(os.path.dirname(__file__), "..", "audio")
 if os.path.isdir(AUDIO_DIR):
     app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
@@ -42,7 +37,6 @@ if os.path.isdir(AUDIO_DIR):
 else:
     print(f"[Audio] WARNING: audio/ folder not found at {AUDIO_DIR}")
 
-# ── Agent pipeline ─────────────────────────────────────────────────────────────
 AGENT_MAP = {
     "learning": learning_agent,
     "wealth":   wealth_agent,
@@ -50,7 +44,45 @@ AGENT_MAP = {
     "tax":      tax_agent,
 }
 
-async def run_pipeline(user_input: str) -> dict:
+# ── Route → human-readable log messages for the transparency panel ─────────────
+ROUTE_LOGS = {
+    "learning": [
+        "🔍 Classifying user intent...",
+        "🎓 Routing to Learning Agent...",
+        "📚 Querying ET Masterclass catalog...",
+        "✅ Response ready.",
+    ],
+    "wealth": [
+        "🔍 Classifying user intent...",
+        "💼 Routing to Wealth Agent...",
+        "📊 Analysing portfolio context via AA sandbox...",
+        "🔎 Scanning FAISS vector store for ET Markets data...",
+        "✅ Response ready.",
+    ],
+    "news": [
+        "🔍 Classifying user intent...",
+        "📰 Routing to News Agent...",
+        "🗃️ Querying FAISS index for latest ET articles...",
+        "✅ Response ready.",
+    ],
+    "tax": [
+        "🔍 Classifying user intent...",
+        "🧾 Routing to Tax Agent...",
+        "📂 Retrieving relevant tax-saving instruments...",
+        "✅ Response ready.",
+    ],
+    "general": [
+        "🔍 Classifying user intent...",
+        "🤖 Routing to Learning Agent (fallback)...",
+        "✅ Response ready.",
+    ],
+}
+
+
+async def run_pipeline(user_input: str, websocket: WebSocket) -> dict:
+    """
+    Full agent pipeline — streams log events to frontend as it runs.
+    """
     state: AgentState = {
         "user_input": user_input,
         "persona":    None,
@@ -61,19 +93,47 @@ async def run_pipeline(user_input: str) -> dict:
 
     loop = asyncio.get_event_loop()
 
-    # Step 1 — Router
-    state = await loop.run_in_executor(None, router_agent, state)
-    print(f"[Router] persona={state['persona']} | intent={state['intent']} | route={state['route']}")
+    # ── Step 1: Router ─────────────────────────────────────────────────────────
+    await websocket.send_text(json.dumps({
+        "type": "log",
+        "message": "🔍 Classifying user intent..."
+    }))
 
-    # Step 2 — Specialist agent
-    route      = state.get("route", "learning")
+    state = await loop.run_in_executor(None, router_agent, state)
+    route   = state.get("route", "learning")
+    persona = state.get("persona", "unknown")
+    intent  = state.get("intent",  "general")
+
+    print(f"[Router] persona={persona} | intent={intent} | route={route}")
+
+    await websocket.send_text(json.dumps({
+        "type":    "log",
+        "message": f"🧠 Detected persona: {persona.replace('_', ' ')} | intent: {intent}"
+    }))
+
+    # ── Step 2: Route-specific logs ────────────────────────────────────────────
+    logs = ROUTE_LOGS.get(route, ROUTE_LOGS["general"])
+    # Skip first log (already sent above), skip last (sent after response)
+    for log_msg in logs[1:-1]:
+        await websocket.send_text(json.dumps({
+            "type":    "log",
+            "message": log_msg
+        }))
+        await asyncio.sleep(0.3)   # small delay so logs feel sequential
+
+    # ── Step 3: Specialist agent ───────────────────────────────────────────────
     specialist = AGENT_MAP.get(route, learning_agent)
     state      = await loop.run_in_executor(None, specialist, state)
 
+    await websocket.send_text(json.dumps({
+        "type":    "log",
+        "message": "✅ Response ready."
+    }))
+
     return {
         "response": state.get("response", "Sorry, I could not generate a response."),
-        "persona":  state.get("persona", "unknown"),
-        "intent":   state.get("intent",  "general"),
+        "persona":  persona,
+        "intent":   intent,
         "route":    route,
     }
 
@@ -95,9 +155,13 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.send_text(json.dumps({"type": "start"}))
 
             try:
-                result = await run_pipeline(user_message)
+                result = await run_pipeline(user_message, websocket)
             except Exception as e:
                 print(f"[Pipeline Error] {e}")
+                await websocket.send_text(json.dumps({
+                    "type":    "log",
+                    "message": f"❌ Pipeline error: {str(e)}"
+                }))
                 await websocket.send_text(json.dumps({
                     "type":    "chunk",
                     "content": f"Sorry, something went wrong: {str(e)}"
