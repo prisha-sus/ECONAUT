@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ET AI Concierge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --et-red:    #E2231A;
+      --et-dark:   #0F0F0F;
+      --et-card:   #161616;
+      --et-border: rgba(255,255,255,0.08);
+      --et-muted:  rgba(255,255,255,0.38);
+      --et-text:   #F0EDE6;
+      --et-accent: #F5A623;
+      --user-bg:   #E2231A;
+      --bot-bg:    #1E1E1E;
+      --radius:    14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--et-dark); color: var(--et-text);
+      height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    header {
+      display: flex; align-items: center; gap: 14px; padding: 16px 24px;
+      border-bottom: 1px solid var(--et-border); flex-shrink: 0;
+      background: rgba(15,15,15,0.96); backdrop-filter: blur(12px); z-index: 10;
+    }
+    .logo-mark {
+      width: 38px; height: 38px; background: var(--et-red); border-radius: 10px;
+      display: grid; place-items: center; font-family: 'DM Serif Display', serif;
+      font-size: 18px; color: #fff; flex-shrink: 0;
+    }
+    .header-text h1 { font-family: 'DM Serif Display', serif; font-size: 17px; font-weight: 400; line-height: 1.2; }
+    .header-text p  { font-size: 12px; color: var(--et-muted); font-weight: 300; }
+    .header-right   { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+    #persona-badge {
+      font-size: 11px; padding: 3px 10px;
+      background: rgba(245,166,35,0.12); border: 1px solid rgba(245,166,35,0.25);
+      border-radius: 100px; color: var(--et-accent); display: none;
+    }
+    .tts-toggle-wrap {
+      display: flex; align-items: center; gap: 7px; font-size: 12px;
+      color: var(--et-muted); cursor: pointer; user-select: none;
+    }
+    .toggle-track {
+      position: relative; width: 32px; height: 18px;
+      background: rgba(255,255,255,0.12); border-radius: 9px;
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .toggle-track.on { background: var(--et-red); }
+    .toggle-thumb {
+      position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+      border-radius: 50%; background: #fff; transition: transform 0.2s; pointer-events: none;
+    }
+    .toggle-track.on .toggle-thumb { transform: translateX(14px); }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #4ade80;
+      flex-shrink: 0; animation: pulse-dot 2s ease-in-out infinite;
+    }
+    .status-dot.disconnected { background: #f87171; animation: none; }
+    @keyframes pulse-dot {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.6; transform:scale(.85); }
+    }
+
+    #messages {
+      flex: 1; overflow-y: auto; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth;
+    }
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-thumb { background: var(--et-border); border-radius: 4px; }
+
+    .welcome {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 10px; flex: 1;
+      text-align: center; padding: 40px 24px; animation: fade-up 0.5s ease both;
+    }
+    .welcome-icon {
+      width: 64px; height: 64px; background: linear-gradient(135deg, var(--et-red), #a0160f);
+      border-radius: 20px; display: grid; place-items: center;
+      font-family: 'DM Serif Display', serif; font-size: 28px; color: #fff; margin-bottom: 8px;
+    }
+    .welcome h2 { font-family: 'DM Serif Display', serif; font-size: 24px; font-weight: 400; }
+    .welcome p  { font-size: 14px; color: var(--et-muted); max-width: 300px; line-height: 1.6; }
+    .welcome-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+    .chip {
+      padding: 8px 14px; background: var(--et-card); border: 1px solid var(--et-border);
+      border-radius: 100px; font-size: 13px; color: var(--et-text);
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    }
+    .chip:hover { border-color: rgba(226,35,26,0.5); background: rgba(226,35,26,0.08); }
+
+    /* FIX 1: Both bot and user rows share the same base flex layout */
+    .msg-row {
+      display: flex;
+      gap: 10px;
+      animation: fade-up 0.25s ease both;
+      /* bot rows: avatar left, bubble right — default */
+    }
+    /* FIX 2: user rows — reverse so avatar is on the right */
+    .msg-row.user {
+      flex-direction: row-reverse;
+    }
+
+    .avatar {
+      width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+      display: grid; place-items: center; font-size: 13px; font-weight: 600;
+      align-self: flex-start; /* pin avatar to top of bubble */
+    }
+    .avatar.bot  { background: var(--et-red); font-family: 'DM Serif Display', serif; color: #fff; }
+    .avatar.user { background: rgba(255,255,255,0.08); color: var(--et-muted); }
+
+    /* FIX 3: col wrapper takes remaining space but never exceeds 72% */
+    .msg-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: min(72%, 560px); /* constrain BOTH bot and user bubbles equally */
+    }
+
+    .bubble {
+      padding: 12px 15px; border-radius: var(--radius);
+      font-size: 14.5px; line-height: 1.7; word-break: break-word; position: relative;
+    }
+    /* FIX 4: bot bubble aligns text left, user bubble aligns text left inside its red bg */
+    .bubble.bot  {
+      background: var(--bot-bg); border: 1px solid var(--et-border);
+      border-bottom-left-radius: 4px;
+    }
+    .bubble.user {
+      background: var(--user-bg); border-bottom-right-radius: 4px; color: #fff;
+      /* FIX 5: user bubble text should align left within the red bubble */
+      text-align: left;
+    }
+
+    .bubble.bot strong { font-weight: 600; color: #fff; }
+    .bubble.bot ul, .bubble.bot ol { padding-left: 18px; margin: 6px 0; }
+    .bubble.bot li { margin-bottom: 4px; }
+    .bubble.bot a  { color: var(--et-accent); text-decoration: none; border-bottom: 1px solid rgba(245,166,35,0.3); }
+    .bubble.bot a:hover { border-color: var(--et-accent); }
+
+    .route-tag { font-size: 10px; color: var(--et-muted); margin-top: 5px; padding: 0 2px; letter-spacing: 0.03em; }
+
+    .bubble.bot.speaking { border-color: rgba(226,35,26,0.45); }
+    .bubble.bot.speaking::after {
+      content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px;
+      background: var(--et-red); border-radius: 0 0 4px 4px;
+      animation: speaking-bar 1s ease-in-out infinite;
+    }
+    @keyframes speaking-bar {
+      0%,100% { opacity:.3; transform:scaleX(.3); transform-origin:left; }
+      50%      { opacity:1;  transform:scaleX(1);  transform-origin:left; }
+    }
+
+    .typing-indicator { display: flex; align-items: center; gap: 4px; padding: 14px 16px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--et-muted); animation: bounce 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: .15s; }
+    .dot:nth-child(3) { animation-delay: .30s; }
+    @keyframes bounce {
+      0%,60%,100% { transform:translateY(0); opacity:.4; }
+      30%          { transform:translateY(-5px); opacity:1; }
+    }
+
+    .input-area {
+      padding: 14px 20px 20px; border-top: 1px solid var(--et-border);
+      flex-shrink: 0; background: rgba(15,15,15,0.97);
+    }
+    .input-wrap {
+      display: flex; align-items: flex-end; gap: 10px;
+      background: var(--et-card); border: 1px solid var(--et-border);
+      border-radius: var(--radius); padding: 8px 8px 8px 16px; transition: border-color 0.2s;
+    }
+    .input-wrap:focus-within { border-color: rgba(226,35,26,0.5); }
+    #user-input {
+      flex: 1; background: none; border: none; outline: none; color: var(--et-text);
+      font-family: 'DM Sans', sans-serif; font-size: 14.5px; line-height: 1.5;
+      resize: none; max-height: 120px; min-height: 36px; padding: 4px 0;
+    }
+    #user-input::placeholder { color: var(--et-muted); }
+
+    #mic-btn {
+      width: 36px; height: 36px; border: none; border-radius: 10px;
+      background: rgba(255,255,255,0.06); color: var(--et-muted);
+      cursor: pointer; display: grid; place-items: center; flex-shrink: 0;
+      transition: background 0.2s, color 0.2s; user-select: none; -webkit-user-select: none;
+    }
+    #mic-btn:hover  { background: rgba(255,255,255,0.1); color: var(--et-text); }
+    #mic-btn.ready  { color: rgba(255,255,255,0.6); }
+    #mic-btn.recording { background: rgba(226,35,26,0.2); color: var(--et-red); animation: mic-pulse 1s ease-in-out infinite; }
+    #mic-btn.disabled  { opacity: .3; cursor: not-allowed; }
+    #mic-btn svg { width: 16px; height: 16px; pointer-events: none; }
+    @keyframes mic-pulse {
+      0%,100% { box-shadow:0 0 0 0 rgba(226,35,26,.4); }
+      50%      { box-shadow:0 0 0 6px rgba(226,35,26,0); }
+    }
+
+    #send-btn {
+      width: 36px; height: 36px; border: none; border-radius: 10px;
+      background: var(--et-red); color: #fff; cursor: pointer;
+      display: grid; place-items: center; flex-shrink: 0;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    #send-btn:hover  { opacity: .85; }
+    #send-btn:active { transform: scale(.93); }
+    #send-btn:disabled { opacity: .35; cursor: not-allowed; }
+    #send-btn svg { width: 16px; height: 16px; }
+
+    #voice-status { font-size: 12px; color: var(--et-accent); padding: 6px 0 0; min-height: 22px; }
+    .ws-banner { text-align: center; font-size: 12px; color: #f87171; padding: 4px 0 0; }
+
+    @keyframes fade-up {
+      from { opacity:0; transform:translateY(8px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">ET</div>
+  <div class="header-text">
+    <h1>ET AI Concierge</h1>
+    <p>Your personal Economic Times guide</p>
+  </div>
+  <div class="header-right">
+    <span id="persona-badge"></span>
+    <label class="tts-toggle-wrap" title="Toggle voice responses">
+      <div class="toggle-track on" id="tts-track"><div class="toggle-thumb"></div></div>
+      <span id="tts-label">Voice on</span>
+    </label>
+    <div class="status-dot" id="status-dot"></div>
+  </div>
+</header>
+
+<div id="messages">
+  <div class="welcome" id="welcome">
+    <div class="welcome-icon">ET</div>
+    <h2>Hello, I'm your ET Concierge</h2>
+    <p>Ask me anything about markets, ET Prime, Masterclasses, or your financial goals.</p>
+    <div class="welcome-chips">
+      <button class="chip" onclick="sendChip(this)">📈 What's happening in markets today?</button>
+      <button class="chip" onclick="sendChip(this)">🎓 I want to learn about investing</button>
+      <button class="chip" onclick="sendChip(this)">💼 Help me plan for retirement</button>
+      <button class="chip" onclick="sendChip(this)">💰 I'm new to the stock market</button>
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-wrap">
+    <textarea id="user-input" rows="1" placeholder="Ask your ET Concierge anything… or press 🎤 to speak" autocomplete="off"></textarea>
+    <button id="mic-btn" class="disabled" title="Initialising microphone…">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="2" width="6" height="11" rx="3"/>
+        <path d="M5 10a7 7 0 0 0 14 0"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="8"  y1="22" x2="16" y2="22"/>
+      </svg>
+    </button>
+    <button id="send-btn" title="Send">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+  <div id="voice-status"></div>
+  <div class="ws-banner" id="ws-banner" style="display:none">⚠ Disconnected — retrying…</div>
+</div>
+
+<script>
+  const messagesEl   = document.getElementById('messages');
+  const input        = document.getElementById('user-input');
+  const sendBtn      = document.getElementById('send-btn');
+  const micBtn       = document.getElementById('mic-btn');
+  const statusDot    = document.getElementById('status-dot');
+  const wsBanner     = document.getElementById('ws-banner');
+  const voiceStatus  = document.getElementById('voice-status');
+  const ttsTrack     = document.getElementById('tts-track');
+  const ttsLabel     = document.getElementById('tts-label');
+  const personaBadge = document.getElementById('persona-badge');
+
+  const TEXT_WS_URL  = 'ws://localhost:8000/ws';
+  const VOICE_WS_URL = 'ws://localhost:8000/ws/voice';
+
+  let textSocket      = null;
+  let streamingBubble = null;
+  let reconnectTimer  = null;
+  let ttsEnabled      = true;
+  let lastBotText     = '';
+  let lastBotBubble   = null;
+  let currentBubble   = null;
+  let rawBotResponse  = '';
+
+  // ── Markdown renderer ────────────────────────────────────────────────────────
+  function renderMarkdown(text) {
+    let html = text
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
+      .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>')
+      .replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*?<\/li>(\n|$))+/gs, match => `<ul>${match}</ul>`);
+    html = html.replace(/\n(?!<)/g, '<br>');
+    return html;
+  }
+
+  // ── TTS ──────────────────────────────────────────────────────────────────────
+  ttsTrack.addEventListener('click', () => {
+    ttsEnabled = !ttsEnabled;
+    ttsTrack.classList.toggle('on', ttsEnabled);
+    ttsLabel.textContent = ttsEnabled ? 'Voice on' : 'Voice off';
+    if (!ttsEnabled) stopSpeaking();
+    else if (lastBotText && lastBotBubble) speakText(lastBotText, lastBotBubble);
+  });
+
+  function stopSpeaking() {
+    window.speechSynthesis.cancel();
+    if (currentBubble) { currentBubble.classList.remove('speaking'); currentBubble = null; }
+  }
+
+  function speakText(text, bubble) {
+    if (!ttsEnabled || !text.trim()) return;
+    stopSpeaking();
+    const clean = text.replace(/\*\*/g, '').replace(/\n/g, ' ').replace(/https?:\/\/\S+/g, '').trim();
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.rate = 1.05; utter.pitch = 1.0; utter.lang = 'en-IN';
+    utter.onstart = () => { currentBubble = bubble; bubble.classList.add('speaking'); };
+    utter.onend   = () => { bubble.classList.remove('speaking'); currentBubble = null; };
+    utter.onerror = () => { bubble.classList.remove('speaking'); currentBubble = null; };
+    window.speechSynthesis.speak(utter);
+  }
+
+  // ── Persona badge ─────────────────────────────────────────────────────────────
+  const PERSONA_LABELS = {
+    first_time_investor:  '🌱 First-time investor',
+    experienced_investor: '📊 Experienced investor',
+  };
+  function updatePersonaBadge(persona) {
+    const label = PERSONA_LABELS[persona];
+    if (label) { personaBadge.textContent = label; personaBadge.style.display = 'inline-block'; }
+  }
+
+  // ── UI helpers ────────────────────────────────────────────────────────────────
+  function setVoiceStatus(msg) { voiceStatus.textContent = msg; }
+
+  function removeWelcome() {
+    const w = document.getElementById('welcome'); if (w) w.remove();
+  }
+
+  function appendBubble(role, html, routeTag) {
+    removeWelcome();
+    const row    = document.createElement('div');
+    row.className = `msg-row ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = `avatar ${role}`;
+    avatar.textContent = role === 'bot' ? 'ET' : 'Y';
+
+    // FIX: use .msg-col class so max-width applies to both bot and user equally
+    const col = document.createElement('div');
+    col.className = 'msg-col';
+
+    const bubble = document.createElement('div');
+    bubble.className = `bubble ${role}`;
+    if (role === 'bot') bubble.innerHTML = html || '';
+    else                bubble.textContent = html || '';
+
+    col.appendChild(bubble);
+
+    if (role === 'bot' && routeTag) {
+      const tag = document.createElement('div');
+      tag.className = 'route-tag';
+      tag.textContent = `Handled by: ${routeTag} agent`;
+      col.appendChild(tag);
+    }
+
+    // FIX: both roles use the same order: avatar, col — row-reverse handles user flip
+    row.appendChild(avatar);
+    row.appendChild(col);
+
+    messagesEl.appendChild(row);
+    scrollBottom();
+    return bubble;
+  }
+
+  function showTyping() {
+    removeWelcome();
+    const row    = document.createElement('div');
+    row.className = 'msg-row bot'; row.id = 'typing-row';
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar bot'; avatar.textContent = 'ET';
+    const col = document.createElement('div');
+    col.className = 'msg-col';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble bot typing-indicator';
+    bubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    col.appendChild(bubble);
+    row.appendChild(avatar);
+    row.appendChild(col);
+    messagesEl.appendChild(row); scrollBottom();
+  }
+
+  function hideTyping() { const t = document.getElementById('typing-row'); if (t) t.remove(); }
+  function scrollBottom() { messagesEl.scrollTop = messagesEl.scrollHeight; }
+
+  // ── Text input / send ─────────────────────────────────────────────────────────
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  sendBtn.addEventListener('click', sendMessage);
+
+  function sendChip(btn) {
+    input.value = btn.innerText.replace(/^[\p{Emoji}\s]+/u, '').trim();
+    sendMessage();
+  }
+
+  function sendMessage() {
+    const text = input.value.trim();
+    if (!text || !textSocket || textSocket.readyState !== WebSocket.OPEN) return;
+    stopSpeaking();
+    appendBubble('user', text);
+    input.value = ''; input.style.height = 'auto';
+    sendBtn.disabled = true;
+    showTyping();
+    textSocket.send(JSON.stringify({ message: text }));
+  }
+
+  // ── Text WebSocket ────────────────────────────────────────────────────────────
+  function connectTextWS() {
+    textSocket = new WebSocket(TEXT_WS_URL);
+    textSocket.onopen = () => {
+      statusDot.className = 'status-dot';
+      wsBanner.style.display = 'none';
+      clearTimeout(reconnectTimer);
+    };
+    textSocket.onmessage = (evt) => {
+      const data = JSON.parse(evt.data);
+      if (data.type === 'start') {
+        hideTyping(); rawBotResponse = '';
+        streamingBubble = appendBubble('bot', '');
+      }
+      if (data.type === 'chunk' && streamingBubble) {
+        rawBotResponse += data.content;
+        streamingBubble.innerHTML = renderMarkdown(rawBotResponse);
+        scrollBottom();
+      }
+      if (data.type === 'end' && streamingBubble) {
+        sendBtn.disabled = false; input.focus();
+        if (data.persona) updatePersonaBadge(data.persona);
+        if (data.route) {
+          const tag = streamingBubble.parentElement?.querySelector('.route-tag');
+          if (tag) tag.textContent = `Handled by: ${data.route} agent`;
+        }
+        lastBotText = rawBotResponse; lastBotBubble = streamingBubble;
+        streamingBubble = null;
+        speakText(lastBotText, lastBotBubble);
+      }
+    };
+    textSocket.onclose = () => {
+      statusDot.className = 'status-dot disconnected';
+      wsBanner.style.display = 'block'; sendBtn.disabled = true;
+      reconnectTimer = setTimeout(connectTextWS, 3000);
+    };
+    textSocket.onerror = () => textSocket.close();
+  }
+  connectTextWS();
+
+  // ── Mic / Voice WebSocket (Phase 2) ───────────────────────────────────────────
+  let micStream = null, mediaRecorder = null, isRecording = false;
+
+  async function initMic() {
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micBtn.classList.remove('disabled'); micBtn.classList.add('ready');
+      micBtn.title = 'Hold to speak';
+    } catch { setVoiceStatus('⚠ Microphone access denied.'); }
+  }
+  initMic();
+
+  function startRecording() {
+    if (isRecording || !micStream || micBtn.classList.contains('disabled')) return;
+    stopSpeaking();
+    isRecording = true; micBtn.classList.add('recording');
+    setVoiceStatus('🔴 Recording… release to transcribe');
+    const voiceSocket = new WebSocket(VOICE_WS_URL);
+    voiceSocket.onopen = () => {
+      mediaRecorder = new MediaRecorder(micStream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm'
+      });
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0 && voiceSocket.readyState === WebSocket.OPEN) voiceSocket.send(e.data);
+      };
+      mediaRecorder.start(250);
+    };
+    voiceSocket.onmessage = (evt) => {
+      const data = JSON.parse(evt.data);
+      if (data.type === 'transcript') {
+        const text = data.text.trim();
+        if (text) {
+          setVoiceStatus(''); input.value = text;
+          input.style.height = 'auto';
+          input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+          sendMessage();
+        } else {
+          setVoiceStatus('No speech detected — try again.');
+          setTimeout(() => setVoiceStatus(''), 2500);
+        }
+      }
+      if (data.type === 'error') { setVoiceStatus(`⚠ ${data.message}`); setTimeout(() => setVoiceStatus(''), 3000); }
+    };
+    voiceSocket.onerror = () => stopRecording(voiceSocket);
+    micBtn._voiceSocket = voiceSocket;
+  }
+
+  function stopRecording(explicitSocket) {
+    if (!isRecording) return;
+    isRecording = false; micBtn.classList.remove('recording');
+    setVoiceStatus('⏳ Transcribing…');
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    const vs = explicitSocket || micBtn._voiceSocket;
+    if (vs && vs.readyState === WebSocket.OPEN) vs.send(JSON.stringify({ type: 'end_of_speech' }));
+  }
+
+  micBtn.addEventListener('mousedown',  (e) => { e.preventDefault(); startRecording(); });
+  micBtn.addEventListener('mouseup',    ()  => stopRecording());
+  micBtn.addEventListener('mouseleave', ()  => { if (isRecording) stopRecording(); });
+  micBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); }, { passive: false });
+  micBtn.addEventListener('touchend',   (e) => { e.preventDefault(); stopRecording(); },  { passive: false });
+</script>
+</body>
+</html>
