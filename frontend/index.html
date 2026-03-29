@@ -97,21 +97,48 @@
     }
     .chip:hover { border-color: rgba(226,35,26,0.5); background: rgba(226,35,26,0.08); }
 
-    .msg-row { display: flex; gap: 10px; animation: fade-up 0.25s ease both; }
-    .msg-row.user { flex-direction: row-reverse; }
+    /* FIX 1: Both bot and user rows share the same base flex layout */
+    .msg-row {
+      display: flex;
+      gap: 10px;
+      animation: fade-up 0.25s ease both;
+      /* bot rows: avatar left, bubble right — default */
+    }
+    /* FIX 2: user rows — reverse so avatar is on the right */
+    .msg-row.user {
+      flex-direction: row-reverse;
+    }
+
     .avatar {
       width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
       display: grid; place-items: center; font-size: 13px; font-weight: 600;
+      align-self: flex-start; /* pin avatar to top of bubble */
     }
     .avatar.bot  { background: var(--et-red); font-family: 'DM Serif Display', serif; color: #fff; }
     .avatar.user { background: rgba(255,255,255,0.08); color: var(--et-muted); }
 
+    /* FIX 3: col wrapper takes remaining space but never exceeds 72% */
+    .msg-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: min(72%, 560px); /* constrain BOTH bot and user bubbles equally */
+    }
+
     .bubble {
-      max-width: min(72%, 560px); padding: 12px 15px; border-radius: var(--radius);
+      padding: 12px 15px; border-radius: var(--radius);
       font-size: 14.5px; line-height: 1.7; word-break: break-word; position: relative;
     }
-    .bubble.bot  { background: var(--bot-bg); border: 1px solid var(--et-border); border-bottom-left-radius: 4px; }
-    .bubble.user { background: var(--user-bg); border-bottom-right-radius: 4px; color: #fff; }
+    /* FIX 4: bot bubble aligns text left, user bubble aligns text left inside its red bg */
+    .bubble.bot  {
+      background: var(--bot-bg); border: 1px solid var(--et-border);
+      border-bottom-left-radius: 4px;
+    }
+    .bubble.user {
+      background: var(--user-bg); border-bottom-right-radius: 4px; color: #fff;
+      /* FIX 5: user bubble text should align left within the red bubble */
+      text-align: left;
+    }
 
     .bubble.bot strong { font-weight: 600; color: #fff; }
     .bubble.bot ul, .bubble.bot ol { padding-left: 18px; margin: 6px 0; }
@@ -332,24 +359,33 @@
     removeWelcome();
     const row    = document.createElement('div');
     row.className = `msg-row ${role}`;
+
     const avatar = document.createElement('div');
     avatar.className = `avatar ${role}`;
     avatar.textContent = role === 'bot' ? 'ET' : 'Y';
-    const col    = document.createElement('div');
-    col.style.cssText = 'display:flex;flex-direction:column;gap:0';
+
+    // FIX: use .msg-col class so max-width applies to both bot and user equally
+    const col = document.createElement('div');
+    col.className = 'msg-col';
+
     const bubble = document.createElement('div');
     bubble.className = `bubble ${role}`;
     if (role === 'bot') bubble.innerHTML = html || '';
     else                bubble.textContent = html || '';
+
     col.appendChild(bubble);
+
     if (role === 'bot' && routeTag) {
       const tag = document.createElement('div');
       tag.className = 'route-tag';
       tag.textContent = `Handled by: ${routeTag} agent`;
       col.appendChild(tag);
     }
-    if (role === 'bot') { row.appendChild(avatar); row.appendChild(col); }
-    else                { row.appendChild(col);    row.appendChild(avatar); }
+
+    // FIX: both roles use the same order: avatar, col — row-reverse handles user flip
+    row.appendChild(avatar);
+    row.appendChild(col);
+
     messagesEl.appendChild(row);
     scrollBottom();
     return bubble;
@@ -361,10 +397,14 @@
     row.className = 'msg-row bot'; row.id = 'typing-row';
     const avatar = document.createElement('div');
     avatar.className = 'avatar bot'; avatar.textContent = 'ET';
+    const col = document.createElement('div');
+    col.className = 'msg-col';
     const bubble = document.createElement('div');
     bubble.className = 'bubble bot typing-indicator';
     bubble.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-    row.appendChild(avatar); row.appendChild(bubble);
+    col.appendChild(bubble);
+    row.appendChild(avatar);
+    row.appendChild(col);
     messagesEl.appendChild(row); scrollBottom();
   }
 
